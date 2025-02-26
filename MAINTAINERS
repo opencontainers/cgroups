@@ -1,8 +1,8 @@
-This meta-project is maintained by the union of MAINTAINERS for all OCI Projects [1].
-
-Other OCI Projects should list one maintainer per line, with a name, email address, and GitHub username:
-
-Random J Developer <random@developer.example.org> (@RandomJDeveloperExample)
-A. U. Thor <author@example.org> (@AUThorExample)
-
-[1]: https://github.com/opencontainers/
+Akihiro Suda <akihiro.suda.cz@hco.ntt.co.jp> (@AkihiroSuda)
+Aleksa Sarai <cyphar@cyphar.com> (@cyphar)
+Kir Kolyshkin <kolyshkin@gmail.com> (@kolyshkin)
+Mrunal Patel <mpatel@redhat.com> (@mrunalp)
+Sebastiaan van Stijn <github@gone.nl> (@thaJeztah)
+Odin Ugedal <odin@uged.al> (@odinuge)
+Peter Hunt <pehunt@redhat.com> (@haircommander)
+Davanum Srinivas <davanum@gmail.com> (@dims)
