@@ -24,8 +24,8 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/opencontainers/runc/libcontainer/cgroups"
-	"github.com/opencontainers/runc/libcontainer/cgroups/internal/path"
+	"github.com/opencontainers/cgroups"
+	"github.com/opencontainers/cgroups/internal/path"
 )
 
 const UnifiedMountpoint = "/sys/fs/cgroup"

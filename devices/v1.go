@@ -6,8 +6,8 @@ import (
 	"reflect"
 
 	"github.com/moby/sys/userns"
-	"github.com/opencontainers/runc/libcontainer/cgroups"
-	devices "github.com/opencontainers/runc/libcontainer/cgroups/devices/config"
+	"github.com/opencontainers/cgroups"
+	devices "github.com/opencontainers/cgroups/devices/config"
 )
 
 var testingSkipFinalCheck bool

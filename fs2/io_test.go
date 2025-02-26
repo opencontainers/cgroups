@@ -7,7 +7,7 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/opencontainers/runc/libcontainer/cgroups"
+	"github.com/opencontainers/cgroups"
 )
 
 const exampleIoStatData = `254:1 rbytes=6901432320 wbytes=14245535744 rios=263278 wios=248603 dbytes=0 dios=0

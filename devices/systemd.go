@@ -11,8 +11,8 @@ import (
 	"github.com/godbus/dbus/v5"
 	"github.com/sirupsen/logrus"
 
-	"github.com/opencontainers/runc/libcontainer/cgroups"
-	devices "github.com/opencontainers/runc/libcontainer/cgroups/devices/config"
+	"github.com/opencontainers/cgroups"
+	devices "github.com/opencontainers/cgroups/devices/config"
 )
 
 // systemdProperties takes the configured device rules and generates a

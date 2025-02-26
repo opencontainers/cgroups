@@ -5,8 +5,8 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/opencontainers/runc/libcontainer/cgroups"
-	"github.com/opencontainers/runc/libcontainer/cgroups/fscommon"
+	"github.com/opencontainers/cgroups"
+	"github.com/opencontainers/cgroups/fscommon"
 )
 
 const (

@@ -4,8 +4,8 @@ import (
 	"math"
 	"strconv"
 
-	"github.com/opencontainers/runc/libcontainer/cgroups"
-	"github.com/opencontainers/runc/libcontainer/cgroups/fscommon"
+	"github.com/opencontainers/cgroups"
+	"github.com/opencontainers/cgroups/fscommon"
 )
 
 type PidsGroup struct{}

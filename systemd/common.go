@@ -15,7 +15,7 @@ import (
 	dbus "github.com/godbus/dbus/v5"
 	"github.com/sirupsen/logrus"
 
-	"github.com/opencontainers/runc/libcontainer/cgroups"
+	"github.com/opencontainers/cgroups"
 )
 
 const (
@@ -34,7 +34,7 @@ var (
 
 	// GenerateDeviceProps is a function to generate systemd device
 	// properties, used by Set methods. Unless
-	// [github.com/opencontainers/runc/libcontainer/cgroups/devices]
+	// [github.com/opencontainers/cgroups/devices]
 	// package is imported, it is set to nil, so cgroup managers can't
 	// configure devices.
 	GenerateDeviceProps func(r *cgroups.Resources, sdVer int) ([]systemdDbus.Property, error)

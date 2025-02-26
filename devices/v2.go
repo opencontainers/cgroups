@@ -6,8 +6,8 @@ import (
 	"github.com/moby/sys/userns"
 	"golang.org/x/sys/unix"
 
-	"github.com/opencontainers/runc/libcontainer/cgroups"
-	devices "github.com/opencontainers/runc/libcontainer/cgroups/devices/config"
+	"github.com/opencontainers/cgroups"
+	devices "github.com/opencontainers/cgroups/devices/config"
 )
 
 func isRWM(perms devices.Permissions) bool {

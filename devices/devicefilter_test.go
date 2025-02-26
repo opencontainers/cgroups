@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	devices "github.com/opencontainers/runc/libcontainer/cgroups/devices/config"
+	devices "github.com/opencontainers/cgroups/devices/config"
 )
 
 func hash(s, comm string) string {

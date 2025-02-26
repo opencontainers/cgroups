@@ -8,9 +8,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/opencontainers/runc/libcontainer/cgroups"
-	devices "github.com/opencontainers/runc/libcontainer/cgroups/devices/config"
-	"github.com/opencontainers/runc/libcontainer/cgroups/systemd"
+	"github.com/opencontainers/cgroups"
+	devices "github.com/opencontainers/cgroups/devices/config"
+	"github.com/opencontainers/cgroups/systemd"
 )
 
 // TestPodSkipDevicesUpdate checks that updating a pod having SkipDevices: true

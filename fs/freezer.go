@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/opencontainers/runc/libcontainer/cgroups"
+	"github.com/opencontainers/cgroups"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/sys/unix"
 )

@@ -3,7 +3,7 @@ package fs
 import (
 	"testing"
 
-	"github.com/opencontainers/runc/libcontainer/cgroups"
+	"github.com/opencontainers/cgroups"
 )
 
 func BenchmarkGetStats(b *testing.B) {

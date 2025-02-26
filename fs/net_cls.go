@@ -3,7 +3,7 @@ package fs
 import (
 	"strconv"
 
-	"github.com/opencontainers/runc/libcontainer/cgroups"
+	"github.com/opencontainers/cgroups"
 )
 
 type NetClsGroup struct{}

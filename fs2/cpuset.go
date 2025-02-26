@@ -1,7 +1,7 @@
 package fs2
 
 import (
-	"github.com/opencontainers/runc/libcontainer/cgroups"
+	"github.com/opencontainers/cgroups"
 )
 
 func isCpusetSet(r *cgroups.Resources) bool {
