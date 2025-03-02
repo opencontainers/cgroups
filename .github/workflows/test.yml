@@ -1,0 +1,36 @@
+name: test
+on:
+  push:
+    tags:
+      - v*
+    branches:
+      - main
+      - release-*
+  pull_request:
+permissions:
+  contents: read
+
+jobs:
+  unit:
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-24.04]
+        go-version: [1.23.x, 1.24.x]
+        race: ["-race", ""]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-go@v5
+      with:
+        go-version: ${{ matrix.go-version }}
+    - run: go test -timeout 3m ${{ matrix.race }} -v ./...
+
+  all-done:
+    needs:
+      - unit
+    runs-on: ubuntu-24.04
+    steps:
+    - run: echo "All jobs completed"
