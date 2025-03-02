@@ -74,3 +74,14 @@ jobs:
       with:
         go-version: "${{ env.GO_VERSION }}"
     - run: go mod tidy --diff
+
+  all-done:
+    needs:
+      - codespell
+      - deps
+      - go-fix
+      - lint
+      - space-at-eol
+    runs-on: ubuntu-24.04
+    steps:
+    - run: echo "All jobs completed"
