@@ -59,3 +59,9 @@ jobs:
       run: pip install --break-system-packages codespell==v2.4.1
     - name: run codespell
       run: codespell
+
+  space-at-eol:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - run: if git -P grep -I -n '\s$'; then echo "^^^ extra whitespace at EOL, please fix"; exit 1; fi
