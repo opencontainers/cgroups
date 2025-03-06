@@ -11,15 +11,15 @@ permissions:
   contents: read
 
 jobs:
-  unit:
+  cgroup-v2:
+    name: "cgroup v2 (Ubuntu 24.04)"
     timeout-minutes: 10
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-24.04]
         go-version: [1.23.x, 1.24.x]
         race: ["-race", ""]
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-24.04
 
     steps:
     - uses: actions/checkout@v4
@@ -28,9 +28,38 @@ jobs:
         go-version: ${{ matrix.go-version }}
     - run: go test -timeout 3m ${{ matrix.race }} -v ./...
 
+  cgroup-v1:
+    name: "cgroup v1 (AlmaLinux 8)"
+    timeout-minutes: 20
+    runs-on: ubuntu-24.04
+    steps:
+    - uses: actions/checkout@v4
+
+    - uses: lima-vm/lima-actions/setup@v1
+      id: lima-actions-setup
+
+    - uses: actions/cache@v4
+      with:
+        path: ~/.cache/lima
+        key: lima-${{ steps.lima-actions-setup.outputs.version }}
+
+    - name: "Start VM"
+      # --plain is set to disable file sharing, port forwarding, built-in containerd, etc. for faster start up
+      run: limactl start --plain --name=default template://almalinux-8
+
+    - name: "Initialize VM"
+      run: |
+        set -eux -o pipefail
+        limactl cp -r . default:/tmp/cgroups
+        lima sudo dnf install -y golang
+
+    - name: "Run unit tests"
+      run: LIMA_WORKDIR=/tmp/cgroups lima sudo GOTOOLCHAIN=auto go test -v ./...
+
   all-done:
     needs:
-      - unit
+      - cgroup-v2
+      - cgroup-v1
     runs-on: ubuntu-24.04
     steps:
     - run: echo "All jobs completed"
