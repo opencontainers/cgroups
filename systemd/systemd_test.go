@@ -178,3 +178,61 @@ func TestUnifiedResToSystemdProps(t *testing.T) {
 		})
 	}
 }
+
+func TestAddCPUQuota(t *testing.T) {
+	if !IsRunningSystemd() {
+		t.Skip("Test requires systemd.")
+	}
+
+	cm := newDbusConnManager(os.Geteuid() != 0)
+
+	testCases := []struct {
+		name                       string
+		quota                      int64
+		period                     uint64
+		expectedCPUQuotaPerSecUSec uint64
+		expectedQuota              int64
+	}{
+		{
+			name:                       "No round up",
+			quota:                      500000,
+			period:                     1000000,
+			expectedCPUQuotaPerSecUSec: 500000,
+			expectedQuota:              500000,
+		},
+		{
+			name:                       "With fraction",
+			quota:                      123456,
+			expectedCPUQuotaPerSecUSec: 1240000,
+			expectedQuota:              124000,
+		},
+		{
+			name:                       "Round up at division",
+			quota:                      500000,
+			period:                     900000,
+			expectedCPUQuotaPerSecUSec: 560000,
+			expectedQuota:              504000,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			props := []systemdDbus.Property{}
+			addCPUQuota(cm, &props, &tc.quota, tc.period)
+			var cpuQuotaPerSecUSec uint64
+			for _, p := range props {
+				if p.Name == "CPUQuotaPerSecUSec" {
+					if err := p.Value.Store(&cpuQuotaPerSecUSec); err != nil {
+						t.Errorf("failed to parse CPUQuotaPerSecUSec: %v", err)
+					}
+				}
+			}
+			if cpuQuotaPerSecUSec != tc.expectedCPUQuotaPerSecUSec {
+				t.Errorf("CPUQuotaPerSecUSec is not set as expected (exp: %v, got: %v)", tc.expectedCPUQuotaPerSecUSec, cpuQuotaPerSecUSec)
+			}
+			if tc.quota != tc.expectedQuota {
+				t.Errorf("quota is not updated as expected (exp: %v, got: %v)", tc.expectedQuota, tc.quota)
+			}
+		})
+	}
+}
