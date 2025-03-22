@@ -2,8 +2,9 @@
 
 linters:
   enable:
-    - gofumpt
     - errorlint
+    - gofumpt
+    - nolintlint
     - unconvert
     - unparam
 
