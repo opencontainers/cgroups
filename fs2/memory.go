@@ -54,7 +54,7 @@ func setMemory(dirPath string, r *cgroups.Resources) error {
 	if swapStr != "" {
 		if err := cgroups.WriteFile(dirPath, "memory.swap.max", swapStr); err != nil {
 			// If swap is not enabled, silently ignore setting to max or disabling it.
-			if !(errors.Is(err, os.ErrNotExist) && (swapStr == "max" || swapStr == "0")) {
+			if !(errors.Is(err, os.ErrNotExist) && (swapStr == "max" || swapStr == "0")) { //nolint:staticcheck // Ignore "QF1001: could apply De Morgan's law".
 				return err
 			}
 		}
