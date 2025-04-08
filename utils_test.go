@@ -5,6 +5,7 @@ import (
 	"errors"
 	"path/filepath"
 	"reflect"
+	"slices"
 	"strings"
 	"testing"
 
@@ -273,14 +274,7 @@ func TestGetCgroupMounts(t *testing.T) {
 			if !strings.HasPrefix(m.Mountpoint, "/sys/fs/cgroup/") && !strings.Contains(m.Mountpoint, ss) {
 				t.Fatalf("unexpected mountpoint for %s: %s", ss, m.Mountpoint)
 			}
-			var ssFound bool
-			for _, mss := range m.Subsystems {
-				if mss == ss {
-					ssFound = true
-					break
-				}
-			}
-			if !ssFound {
+			if !slices.Contains(m.Subsystems, ss) {
 				t.Fatalf("subsystem %s not found in Subsystems field %v", ss, m.Subsystems)
 			}
 		}
