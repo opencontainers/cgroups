@@ -1,6 +1,7 @@
 package fs
 
 import (
+	"maps"
 	"strconv"
 	"testing"
 
@@ -465,10 +466,7 @@ func TestBlkioStatsNoFilesBFQDebug(t *testing.T) {
 	for _, testCase := range testCases {
 		path := tempDir(t, "cpuset")
 
-		tempBlkioTestFiles := map[string]string{}
-		for i, v := range blkioBFQDebugStatsTestFiles {
-			tempBlkioTestFiles[i] = v
-		}
+		tempBlkioTestFiles := maps.Clone(blkioBFQDebugStatsTestFiles)
 		delete(tempBlkioTestFiles, testCase.filename)
 
 		writeFileContents(t, path, tempBlkioTestFiles)
@@ -579,10 +577,7 @@ func TestBlkioStatsNoFilesCFQ(t *testing.T) {
 	for _, testCase := range testCases {
 		path := tempDir(t, "cpuset")
 
-		tempBlkioTestFiles := map[string]string{}
-		for i, v := range blkioCFQStatsTestFiles {
-			tempBlkioTestFiles[i] = v
-		}
+		tempBlkioTestFiles := maps.Clone(blkioCFQStatsTestFiles)
 		delete(tempBlkioTestFiles, testCase.filename)
 
 		writeFileContents(t, path, tempBlkioTestFiles)
