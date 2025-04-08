@@ -304,8 +304,9 @@ func emulatorFromList(list io.Reader) (*emulator, error) {
 // This function is the sole reason for all of emulator -- to allow us
 // to figure out how to update a containers' cgroups without causing spurious
 // device errors (if possible).
-func (source *emulator) Transition(target *emulator) ([]*devices.Rule, error) { //nolint:revive // Ignore receiver-naming warning.
+func (e *emulator) Transition(target *emulator) ([]*devices.Rule, error) {
 	var transitionRules []*devices.Rule
+	source := e
 	oldRules := source.rules
 
 	// If the default policy doesn't match, we need to include a "disruptive"
