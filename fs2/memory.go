@@ -18,17 +18,14 @@ import (
 // cgroupv2 files with .min, .max, .low, or .high suffix.
 // The value of -1 is converted to "max" for cgroupv1 compatibility
 // (which used to write -1 to remove the limit).
-func numToStr(value int64) (ret string) {
-	switch {
-	case value == 0:
-		ret = ""
-	case value == -1:
-		ret = "max"
-	default:
-		ret = strconv.FormatInt(value, 10)
+func numToStr(value int64) string {
+	switch value {
+	case 0:
+		return ""
+	case -1:
+		return "max"
 	}
-
-	return ret
+	return strconv.FormatInt(value, 10)
 }
 
 func isMemorySet(r *cgroups.Resources) bool {
