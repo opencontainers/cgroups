@@ -231,7 +231,7 @@ func rmdir(path string, retry bool) error {
 
 again:
 	err := unix.Rmdir(path)
-	switch err { // nolint:errorlint // unix errors are bare
+	switch err {
 	case nil, unix.ENOENT:
 		return nil
 	case unix.EINTR:
