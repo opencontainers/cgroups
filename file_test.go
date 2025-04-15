@@ -32,7 +32,7 @@ func TestWriteCgroupFileHandlesInterrupt(t *testing.T) {
 		t.Skip(err)
 	}
 
-	for i := 0; i < 100000; i++ {
+	for i := range 100000 {
 		limit := 1024*1024 + i
 		if err := WriteFile(cgroupPath, memoryLimit, strconv.Itoa(limit)); err != nil {
 			t.Fatalf("Failed to write %d on attempt %d: %+v", limit, i, err)

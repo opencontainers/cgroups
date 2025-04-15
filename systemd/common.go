@@ -89,7 +89,7 @@ func ExpandSlice(slice string) (string, error) {
 	return path, nil
 }
 
-func newProp(name string, units interface{}) systemdDbus.Property {
+func newProp(name string, units any) systemdDbus.Property {
 	return systemdDbus.Property{
 		Name:  name,
 		Value: dbus.MakeVariant(units),
@@ -266,7 +266,7 @@ func systemdVersionAtoi(str string) (int, error) {
 	// Unconditionally remove the leading prefix ("v).
 	str = strings.TrimLeft(str, `"v`)
 	// Match on the first integer we can grab.
-	for i := 0; i < len(str); i++ {
+	for i := range len(str) {
 		if str[i] < '0' || str[i] > '9' {
 			// First non-digit: cut the tail.
 			str = str[:i]

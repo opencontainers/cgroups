@@ -395,7 +395,7 @@ func WriteCgroupProc(dir string, pid int) error {
 	}
 	defer file.Close()
 
-	for i := 0; i < 5; i++ {
+	for range 5 {
 		_, err = file.WriteString(strconv.Itoa(pid))
 		if err == nil {
 			return nil

@@ -1,6 +1,7 @@
 package fs
 
 import (
+	"maps"
 	"reflect"
 	"testing"
 
@@ -211,10 +212,7 @@ func TestCPUSetStatsMissingFiles(t *testing.T) {
 		t.Run(testCase.desc, func(t *testing.T) {
 			path := tempDir(t, "cpuset")
 
-			tempCpusetTestFiles := map[string]string{}
-			for i, v := range cpusetTestFiles {
-				tempCpusetTestFiles[i] = v
-			}
+			tempCpusetTestFiles := maps.Clone(cpusetTestFiles)
 
 			if testCase.removeFile {
 				delete(tempCpusetTestFiles, testCase.filename)

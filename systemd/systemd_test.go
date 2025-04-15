@@ -90,7 +90,7 @@ func TestUnitExistsIgnored(t *testing.T) {
 	pm := newManager(t, podConfig)
 
 	// create twice to make sure "UnitExists" error is ignored.
-	for i := 0; i < 2; i++ {
+	for range 2 {
 		if err := pm.Apply(-1); err != nil {
 			t.Fatal(err)
 		}

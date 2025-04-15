@@ -95,7 +95,7 @@ func TestPodSkipDevicesUpdate(t *testing.T) {
 	}
 
 	// Now update the pod a few times.
-	for i := 0; i < 42; i++ {
+	for range 42 {
 		podConfig.Resources.PidsLimit++
 		podConfig.Resources.Memory += 1024 * 1024
 		if err := pm.Set(podConfig.Resources); err != nil {
