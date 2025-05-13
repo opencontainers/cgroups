@@ -413,16 +413,36 @@ func WriteCgroupProc(dir string, pid int) error {
 	return err
 }
 
+// ConvertCPUSharesToCgroupV2Value converts CPU shares to CPU weight.
 // Since the OCI spec is designed for cgroup v1, in some cases
-// there is need to convert from the cgroup v1 configuration to cgroup v2
-// the formula for cpuShares is y = (1 + ((x - 2) * 9999) / 262142)
-// convert from [2-262144] to [1-10000]
-// 262144 comes from Linux kernel definition "#define MAX_SHARES (1UL << 18)"
+// there is need to convert from the cgroup v1 configuration to cgroup v2.
+//
+// Deprecated: use [ConvertCPUSharesToCPUWeight] instead.
 func ConvertCPUSharesToCgroupV2Value(cpuShares uint64) uint64 {
+	// For both CPU shares and CPU weight, 0 means unset.
 	if cpuShares == 0 {
 		return 0
 	}
-	return (1 + ((cpuShares-2)*9999)/262142)
+	return convertCPUShares(cpuShares)
+}
+
+// ConvertCPUSharesToCPUWeight converts CPU shares (suitable for cgroup v1)
+// to CPU weight (suitable for cgroup v2). If the conversion is not possible,
+// an error is returned.
+func ConvertCPUSharesToCPUWeight(shares uint64) (uint64, error) {
+	if shares == 0 {
+		return 0, nil
+	}
+	if shares < 2 || shares > 262144 {
+		return 0, errors.New("cpu-shares should be between 2 and 262144")
+	}
+	return convertCPUShares(shares), nil
+}
+
+func convertCPUShares(shares uint64) uint64 {
+	// Convert from [2-262144] to [1-10000].
+	// 262144 comes from Linux kernel definition "#define MAX_SHARES (1UL << 18)"
+	return 1 + ((shares-2)*9999)/262142
 }
 
 // ConvertMemorySwapToCgroupV2Value converts MemorySwap value from OCI spec

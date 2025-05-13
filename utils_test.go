@@ -534,16 +534,27 @@ func TestGetHugePageSizeImpl(t *testing.T) {
 	}
 }
 
-func TestConvertCPUSharesToCgroupV2Value(t *testing.T) {
-	cases := map[uint64]uint64{
-		0:      0,
-		2:      1,
-		262144: 10000,
+func TestConvertCPUSharesToCPUWeight(t *testing.T) {
+	cases := []struct {
+		in, out uint64
+		isErr   bool
+	}{
+		{in: 0, out: 0},
+		{in: 2, out: 1},
+		{in: 262144, out: 10000},
+		{in: 1, isErr: true},
+		{in: 262145, isErr: true},
 	}
-	for i, expected := range cases {
-		got := ConvertCPUSharesToCgroupV2Value(i)
-		if got != expected {
-			t.Errorf("expected ConvertCPUSharesToCgroupV2Value(%d) to be %d, got %d", i, expected, got)
+	for _, tc := range cases {
+		got, err := ConvertCPUSharesToCPUWeight(tc.in)
+		if tc.isErr {
+			if err == nil {
+				t.Errorf("ConvertCPUSharesToCPUWeight(%d): expected error, got nil", tc.in)
+			}
+		} else if err != nil {
+			t.Errorf("ConvertCPUSharesToCPUWeight(%d): expected error, got nil", tc.in)
+		} else if got != tc.out {
+			t.Errorf("ConvertCPUSharesToCPUWeight(%d): want %d, got %d", tc.in, tc.out, got)
 		}
 	}
 }
