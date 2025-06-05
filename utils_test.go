@@ -536,9 +536,12 @@ func TestGetHugePageSizeImpl(t *testing.T) {
 
 func TestConvertCPUSharesToCgroupV2Value(t *testing.T) {
 	cases := map[uint64]uint64{
-		0:      0,
-		2:      1,
-		262144: 10000,
+		0:      0,     // Unset.
+		1:      1,     // Below minimum (out of range).
+		2:      1,     // Minimum.
+		1024:   100,   // Default.
+		262144: 10000, // Maximum.
+		262145: 10000, // Above maximum (out of range).
 	}
 	for i, expected := range cases {
 		got := ConvertCPUSharesToCgroupV2Value(i)
