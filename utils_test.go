@@ -555,10 +555,10 @@ func TestConvertCPUSharesToCgroupV2Value(t *testing.T) {
 		sharesMax:     weightMax,     // Maximum.
 		sharesMax + 1: weightMax,     // Above the maximum (out of range).
 	}
-	for i, expected := range cases {
-		got := ConvertCPUSharesToCgroupV2Value(i)
-		if got != expected {
-			t.Errorf("expected ConvertCPUSharesToCgroupV2Value(%d) to be %d, got %d", i, expected, got)
+	for shares, want := range cases {
+		got := ConvertCPUSharesToCgroupV2Value(shares)
+		if got != want {
+			t.Errorf("ConvertCPUSharesToCgroupV2Value(%d): got %d, want %d", shares, got, want)
 		}
 	}
 }
