@@ -535,15 +535,30 @@ func TestGetHugePageSizeImpl(t *testing.T) {
 }
 
 func TestConvertCPUSharesToCgroupV2Value(t *testing.T) {
+	const (
+		sharesMin = 2
+		sharesMax = 262144
+		sharesDef = 1024
+		weightMin = 1
+		weightMax = 10000
+		weightDef = 100
+		unset     = 0
+	)
 	cases := map[uint64]uint64{
-		0:      0,
-		2:      1,
-		262144: 10000,
+		unset: unset,
+
+		sharesMin - 1: weightMin,     // Below the minimum (out of range).
+		sharesMin:     weightMin,     // Minimum.
+		sharesMin + 1: weightMin + 1, // Just above the minimum.
+		sharesDef:     weightDef,     // Default.
+		sharesMax - 1: weightMax,     // Just below the maximum.
+		sharesMax:     weightMax,     // Maximum.
+		sharesMax + 1: weightMax,     // Above the maximum (out of range).
 	}
-	for i, expected := range cases {
-		got := ConvertCPUSharesToCgroupV2Value(i)
-		if got != expected {
-			t.Errorf("expected ConvertCPUSharesToCgroupV2Value(%d) to be %d, got %d", i, expected, got)
+	for shares, want := range cases {
+		got := ConvertCPUSharesToCgroupV2Value(shares)
+		if got != want {
+			t.Errorf("ConvertCPUSharesToCgroupV2Value(%d): got %d, want %d", shares, got, want)
 		}
 	}
 }
