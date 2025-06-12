@@ -7,6 +7,9 @@ on:
       - main
       - release-*
   pull_request:
+  schedule:
+    # Runs at 00:00 UTC every Monday
+    - cron: '0 0 * * 1'
 env:
   GO_VERSION: 1.24
 permissions:
@@ -75,11 +78,17 @@ jobs:
         go-version: "${{ env.GO_VERSION }}"
     - run: go mod tidy --diff
 
+  govulncheck:
+    runs-on: ubuntu-24.04
+    steps:
+    - uses: golang/govulncheck-action@v1
+
   all-done:
     needs:
       - codespell
       - deps
       - go-fix
+      - govulncheck
       - lint
       - space-at-eol
     runs-on: ubuntu-24.04
