@@ -30,7 +30,7 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version: "${{ env.GO_VERSION }}"
-      - uses: golangci/golangci-lint-action@v7
+      - uses: golangci/golangci-lint-action@v8
         with:
           version: v2.0
       # Extra linters, only checking new code from a pull request.
