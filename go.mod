@@ -12,3 +12,5 @@ require (
 	github.com/sirupsen/logrus v1.9.3
 	golang.org/x/sys v0.30.0
 )
+
+replace github.com/coreos/go-systemd/v22 v22.5.0 => github.com/kolyshkin/go-systemd/v22 v22.3.2-0.20250725225557-871b63ece367
