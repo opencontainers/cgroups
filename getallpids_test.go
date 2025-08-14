@@ -6,7 +6,7 @@ import (
 
 func BenchmarkGetAllPids(b *testing.B) {
 	total := 0
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		i, err := GetAllPids("/sys/fs/cgroup")
 		if err != nil {
 			b.Fatal(err)

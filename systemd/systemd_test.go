@@ -160,7 +160,6 @@ func TestUnifiedResToSystemdProps(t *testing.T) {
 	}
 
 	for _, tc := range testCases {
-		tc := tc
 		t.Run(tc.name, func(t *testing.T) {
 			if tc.minVer != 0 && systemdVersion(cm) < tc.minVer {
 				t.Skipf("requires systemd >= %d", tc.minVer)

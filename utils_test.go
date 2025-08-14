@@ -323,8 +323,8 @@ func BenchmarkGetCgroupMounts(b *testing.B) {
 	if err != nil {
 		b.Fatal(err)
 	}
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+
+	for b.Loop() {
 		if _, err := getCgroupMountsHelper(subsystems, mi, false); err != nil {
 			b.Fatal(err)
 		}
@@ -449,7 +449,7 @@ func BenchmarkGetHugePageSizeImpl(b *testing.B) {
 		output []string
 		err    error
 	)
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		output, err = getHugePageSizeFromFilenames(input)
 	}
 	if err != nil || len(output) != len(input) {
@@ -512,7 +512,6 @@ func TestGetHugePageSizeImpl(t *testing.T) {
 	}
 
 	for _, c := range testCases {
-		c := c
 		t.Run(c.doc, func(t *testing.T) {
 			output, err := getHugePageSizeFromFilenames(c.input)
 			t.Log("input:", c.input, "; output:", output, "; err:", err)
@@ -639,7 +638,6 @@ func TestConvertMemorySwapToCgroupV2Value(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		c := c
 		t.Run(c.descr, func(t *testing.T) {
 			swap, err := ConvertMemorySwapToCgroupV2Value(c.memswap, c.memory)
 			if c.expErr {
