@@ -82,8 +82,7 @@ func BenchmarkWriteFile(b *testing.B) {
 		"\n\n\n\n\n\n\n\n",
 	}
 
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		for _, val := range tc {
 			if err := WriteFileByLine(dir, "file", val); err != nil {
 				b.Fatal(err)
