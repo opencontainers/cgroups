@@ -254,7 +254,7 @@ func TestFindDeviceGroup(t *testing.T) {
 }
 
 func BenchmarkFindDeviceGroup(b *testing.B) {
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		if err := testFindDeviceGroup(); err != nil {
 			b.Fatal(err)
 		}

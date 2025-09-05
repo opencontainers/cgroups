@@ -36,8 +36,7 @@ func BenchmarkGetStats(b *testing.B) {
 
 	var st *cgroups.Stats
 
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		st, err = m.GetStats()
 		if err != nil {
 			b.Fatal(err)
