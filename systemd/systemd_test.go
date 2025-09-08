@@ -1,8 +1,10 @@
 package systemd
 
 import (
+	"context"
 	"os"
 	"reflect"
+	"strconv"
 	"testing"
 
 	systemdDbus "github.com/coreos/go-systemd/v22/dbus"
@@ -157,6 +159,12 @@ func TestUnifiedResToSystemdProps(t *testing.T) {
 				newProp("CPUWeight", uint64(1000)),
 			},
 		},
+		{
+			name: "memory.oom.group handled by Apply method",
+			res: map[string]string{
+				"memory.oom.group": "1",
+			},
+		},
 	}
 
 	for _, tc := range testCases {
@@ -232,6 +240,101 @@ func TestAddCPUQuota(t *testing.T) {
 			}
 			if tc.quota != tc.expectedQuota {
 				t.Errorf("quota is not updated as expected (exp: %v, got: %v)", tc.expectedQuota, tc.quota)
+			}
+		})
+	}
+}
+
+func TestOOMPolicyApply(t *testing.T) {
+	if !IsRunningSystemd() {
+		t.Skip("Test requires systemd.")
+	}
+	if !cgroups.IsCgroup2UnifiedMode() {
+		t.Skip("cgroup v2 is required")
+	}
+	if os.Geteuid() != 0 {
+		t.Skip("Test requires root.")
+	}
+
+	testCases := []struct {
+		name           string
+		oomGroupValue  string
+		expectedPolicy string
+		expectError    bool
+	}{
+		{
+			name:           "memory.oom.group=0 sets OOMPolicy=continue",
+			oomGroupValue:  "0",
+			expectedPolicy: "continue",
+			expectError:    false,
+		},
+		{
+			name:           "memory.oom.group=1 sets OOMPolicy=kill",
+			oomGroupValue:  "1",
+			expectedPolicy: "kill",
+			expectError:    false,
+		},
+		{
+			name:          "invalid memory.oom.group value",
+			oomGroupValue: "invalid",
+			expectError:   true,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			config := &cgroups.Cgroup{
+				Name: "test-oom-policy-" + strconv.FormatInt(int64(os.Getpid()), 10),
+				Resources: &cgroups.Resources{
+					Unified: map[string]string{
+						"memory.oom.group": tc.oomGroupValue,
+					},
+				},
+			}
+
+			manager, err := NewUnifiedManager(config, "")
+			if err != nil {
+				t.Fatalf("Failed to create manager: %v", err)
+			}
+			defer func() {
+				_ = manager.Destroy()
+			}()
+
+			err = manager.Apply(-1)
+			if tc.expectError {
+				if err == nil {
+					t.Fatal("Expected error but got none")
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("Unexpected error: %v", err)
+			}
+
+			unitName := getUnitName(config)
+			conn, err := systemdDbus.NewSystemdConnectionContext(context.Background())
+			if err != nil {
+				t.Fatalf("Failed to connect to systemd: %v", err)
+			}
+			defer conn.Close()
+
+			properties, err := conn.GetUnitPropertiesContext(context.Background(), unitName)
+			if err != nil {
+				t.Fatalf("Failed to get unit properties: %v", err)
+			}
+
+			oomPolicyValue, exists := properties["OOMPolicy"]
+			if !exists {
+				t.Fatal("OOMPolicy property not found")
+			}
+
+			oomPolicyStr, ok := oomPolicyValue.(string)
+			if !ok {
+				t.Fatalf("OOMPolicy value is not a string: %T", oomPolicyValue)
+			}
+
+			if oomPolicyStr != tc.expectedPolicy {
+				t.Errorf("Expected OOMPolicy=%s, got %s", tc.expectedPolicy, oomPolicyStr)
 			}
 		})
 	}
