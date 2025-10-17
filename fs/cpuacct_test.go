@@ -2,6 +2,7 @@ package fs
 
 import (
 	"reflect"
+	"slices"
 	"testing"
 
 	"github.com/opencontainers/cgroups"
@@ -93,6 +94,54 @@ func TestCpuacctStatsWithoutUsageAll(t *testing.T) {
 	if !reflect.DeepEqual(expectedStats, actualStats.CpuStats.CpuUsage) {
 		t.Errorf("Expected CPU usage %#v but found %#v\n",
 			expectedStats, actualStats.CpuStats.CpuUsage)
+	}
+}
+
+// TestCpuacctUsageAllExtra checks that if there are extra columns
+// in cpuacct.usage_all, yet the first three are as expected, we
+// can still parse it successfully.
+func TestCpuacctUsageAllExtra(t *testing.T) {
+	path := tempDir(t, "cpuacct")
+	// These extra columns come from the custom Tencent kernel,
+	// see https://github.com/OpenCloudOS/TencentOS-kernel-0/commit/0b667819c3aaa9c8ac904c6b03256b86be93fc05
+	err := cgroups.WriteFile(path, "cpuacct.usage_all",
+		`cpu user system bt_user bt_system
+0 962250696038415 637727786389114 0 0
+1 981956408513304 638197595421064 0 0
+`)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	system, user, err := getPercpuUsageInModes(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	expUser := []uint64{962250696038415, 981956408513304}
+	expSystem := []uint64{637727786389114, 638197595421064}
+	if !slices.Equal(user, expUser) {
+		t.Fatalf("unexpected user data (want %+v, got %+v", expUser, user)
+	}
+	if !slices.Equal(system, expSystem) {
+		t.Fatalf("unexpected system data (want %+v, got +%v)", expSystem, system)
+	}
+}
+
+func TestCpuacctUsageAllBad(t *testing.T) {
+	path := tempDir(t, "cpuacct")
+	err := cgroups.WriteFile(path, "cpuacct.usage_all",
+		`cpu bad data fields
+0 1 2
+`)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, _, err = getPercpuUsageInModes(path)
+	t.Log(err)
+	if err == nil {
+		t.Fatal("want error, got nil")
 	}
 }
 
