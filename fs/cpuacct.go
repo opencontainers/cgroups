@@ -133,7 +133,10 @@ func getPercpuUsageInModes(path string) ([]uint64, []uint64, error) {
 
 	for scanner.Scan() {
 		// Each line is: cpu user system
-		fields := strings.SplitN(scanner.Text(), " ", 3)
+		// Keep 'n' at 4 — downstream changes or refactoring of
+		// "cpuacct.usage_all" could otherwise break system usage parsing.
+		// (issue: https://github.com/opencontainers/cgroups/issues/46)
+		fields := strings.SplitN(scanner.Text(), " ", 4)
 		if len(fields) != 3 {
 			continue
 		}
