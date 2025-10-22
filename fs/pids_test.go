@@ -13,6 +13,8 @@ const (
 	maxLimited   = 1024
 )
 
+func toPtr[T any](v T) *T { return &v }
+
 func TestPidsSetMax(t *testing.T) {
 	path := tempDir(t, "pids")
 
@@ -21,7 +23,7 @@ func TestPidsSetMax(t *testing.T) {
 	})
 
 	r := &cgroups.Resources{
-		PidsLimit: maxLimited,
+		PidsLimit: toPtr[int64](maxLimited),
 	}
 	pids := &PidsGroup{}
 	if err := pids.Set(path, r); err != nil {
@@ -37,6 +39,55 @@ func TestPidsSetMax(t *testing.T) {
 	}
 }
 
+func TestPidsSetZero(t *testing.T) {
+	path := tempDir(t, "pids")
+
+	writeFileContents(t, path, map[string]string{
+		"pids.max": "max",
+	})
+
+	r := &cgroups.Resources{
+		PidsLimit: toPtr[int64](0),
+	}
+	pids := &PidsGroup{}
+	if err := pids.Set(path, r); err != nil {
+		t.Fatal(err)
+	}
+
+	value, err := fscommon.GetCgroupParamUint(path, "pids.max")
+	if err != nil {
+		t.Fatal(err)
+	}
+	// See comment in (*PidsGroup).Set for why we set to 1 here.
+	if value != 1 {
+		t.Fatalf("Expected 1, got %d for setting pids.max = 0", value)
+	}
+}
+
+func TestPidsUnset(t *testing.T) {
+	path := tempDir(t, "pids")
+
+	writeFileContents(t, path, map[string]string{
+		"pids.max": "12345",
+	})
+
+	r := &cgroups.Resources{
+		PidsLimit: nil,
+	}
+	pids := &PidsGroup{}
+	if err := pids.Set(path, r); err != nil {
+		t.Fatal(err)
+	}
+
+	value, err := fscommon.GetCgroupParamUint(path, "pids.max")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if value != 12345 {
+		t.Fatalf("Expected 12345, got %d for not setting pids.max", value)
+	}
+}
+
 func TestPidsSetUnlimited(t *testing.T) {
 	path := tempDir(t, "pids")
 
@@ -45,7 +96,7 @@ func TestPidsSetUnlimited(t *testing.T) {
 	})
 
 	r := &cgroups.Resources{
-		PidsLimit: maxUnlimited,
+		PidsLimit: toPtr[int64](maxUnlimited),
 	}
 	pids := &PidsGroup{}
 	if err := pids.Set(path, r); err != nil {
