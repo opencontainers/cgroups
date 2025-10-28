@@ -13,6 +13,8 @@ import (
 	"github.com/opencontainers/cgroups/systemd"
 )
 
+func toPtr[T any](v T) *T { return &v }
+
 // TestPodSkipDevicesUpdate checks that updating a pod having SkipDevices: true
 // does not result in spurious "permission denied" errors in a container
 // running under the pod. The test is somewhat similar in nature to the
@@ -32,7 +34,7 @@ func TestPodSkipDevicesUpdate(t *testing.T) {
 		Parent:  "system.slice",
 		Name:    podName,
 		Resources: &cgroups.Resources{
-			PidsLimit:   42,
+			PidsLimit:   toPtr[int64](42),
 			Memory:      32 * 1024 * 1024,
 			SkipDevices: true,
 		},
@@ -96,7 +98,7 @@ func TestPodSkipDevicesUpdate(t *testing.T) {
 
 	// Now update the pod a few times.
 	for range 42 {
-		podConfig.Resources.PidsLimit++
+		(*podConfig.Resources.PidsLimit)++
 		podConfig.Resources.Memory += 1024 * 1024
 		if err := pm.Set(podConfig.Resources); err != nil {
 			t.Fatal(err)

@@ -236,3 +236,40 @@ func TestAddCPUQuota(t *testing.T) {
 		})
 	}
 }
+
+func TestTasksMax(t *testing.T) {
+	if !IsRunningSystemd() {
+		t.Skip("Test requires systemd.")
+	}
+	if os.Geteuid() != 0 {
+		t.Skip("Test requires root.")
+	}
+
+	podConfig := &cgroups.Cgroup{
+		Parent:    "system.slice",
+		Name:      "system-runc_test_tasksmax.slice",
+		Resources: &cgroups.Resources{},
+	}
+	// Create "pods" cgroup (a systemd slice to hold containers).
+	pm := newManager(t, podConfig)
+	if err := pm.Apply(-1); err != nil {
+		t.Fatal(err)
+	}
+
+	res := &cgroups.Resources{PidsLimit: nil}
+	if err := pm.Set(res); err != nil {
+		t.Fatalf("failed to set PidsLimit=nil: %v", err)
+	}
+
+	for _, limit := range []int64{100, 0, 42, -1, 100, -99} {
+		res.PidsLimit = &limit
+		if err := pm.Set(res); err != nil {
+			t.Fatalf("failed to set PidsLimit=%d: %v", limit, err)
+		}
+	}
+
+	res.PidsLimit = nil
+	if err := pm.Set(res); err != nil {
+		t.Fatalf("failed to set PidsLimit=nil: %v", err)
+	}
+}
