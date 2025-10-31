@@ -25,3 +25,5 @@ linters:
         text: "(type|struct field) (CpuUsage|CpuStats) should be "
       - path: config_linux.go
         text: "struct field (CpuShares|CpuQuota|CpuBurst|CpuPeriod|CpuRtRuntime|CpuRtPeriod|CpuWeight) should be "
+      - path: devices/config/device.go
+        text: "struct field (Uid|Gid) should be "
