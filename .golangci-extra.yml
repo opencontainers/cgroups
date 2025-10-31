@@ -23,3 +23,5 @@ linters:
       # Legacy names we can't change without breaking compatibility.
       - path: stats.go
         text: "(type|struct field) (CpuUsage|CpuStats) should be "
+      - path: config_linux.go
+        text: "struct field (CpuShares|CpuQuota|CpuBurst|CpuPeriod|CpuRtRuntime|CpuRtPeriod|CpuWeight) should be "
