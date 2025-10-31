@@ -9,7 +9,7 @@ import (
 
 func hash(s, comm string) string {
 	var res []string
-	for _, l := range strings.Split(s, "\n") {
+	for l := range strings.SplitSeq(s, "\n") {
 		trimmed := strings.TrimSpace(l)
 		if trimmed == "" || strings.HasPrefix(trimmed, comm) {
 			continue

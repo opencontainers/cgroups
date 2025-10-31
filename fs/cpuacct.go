@@ -105,7 +105,7 @@ func getPercpuUsage(path string) ([]uint64, error) {
 	if err != nil {
 		return percpuUsage, err
 	}
-	for _, value := range strings.Fields(data) {
+	for value := range strings.FieldsSeq(data) {
 		value, err := strconv.ParseUint(value, 10, 64)
 		if err != nil {
 			return percpuUsage, &parseError{Path: path, File: file, Err: err}
