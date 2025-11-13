@@ -512,7 +512,6 @@ func TestGetHugePageSizeImpl(t *testing.T) {
 	}
 
 	for _, c := range testCases {
-		c := c
 		t.Run(c.doc, func(t *testing.T) {
 			output, err := getHugePageSizeFromFilenames(c.input)
 			t.Log("input:", c.input, "; output:", output, "; err:", err)
@@ -639,7 +638,6 @@ func TestConvertMemorySwapToCgroupV2Value(t *testing.T) {
 	}
 
 	for _, c := range cases {
-		c := c
 		t.Run(c.descr, func(t *testing.T) {
 			swap, err := ConvertMemorySwapToCgroupV2Value(c.memswap, c.memory)
 			if c.expErr {
