@@ -741,7 +741,6 @@ func testDeviceEmulatorApply(t *testing.T, baseDefaultAllow bool) {
 	}
 
 	for _, test := range tests {
-		test := test
 		t.Run(test.name, func(t *testing.T) {
 			err := test.base.Apply(test.rule)
 			if err != nil && test.expected != nil {
@@ -1058,7 +1057,6 @@ func testDeviceEmulatorTransition(t *testing.T, sourceDefaultAllow bool) {
 	}
 
 	for _, test := range tests {
-		test := test
 		t.Run(test.name, func(t *testing.T) {
 			// If we are in black-list mode, we need to prepend the relevant
 			// clear-all rule (the expected rule lists are written with
