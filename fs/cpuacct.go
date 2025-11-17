@@ -26,6 +26,11 @@ func (s *CpuacctGroup) Name() string {
 	return "cpuacct"
 }
 
+// ID returns the controller ID for cpuacct subsystem.
+func (s *CpuacctGroup) ID() cgroups.Controller {
+	return cgroups.CPU
+}
+
 func (s *CpuacctGroup) Apply(path string, _ *cgroups.Resources, pid int) error {
 	return apply(path, pid)
 }
