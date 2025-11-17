@@ -339,14 +339,33 @@ func (m *LegacyManager) GetAllPids() ([]int, error) {
 }
 
 func (m *LegacyManager) GetStats() (*cgroups.Stats, error) {
+	return m.Stats(nil)
+}
+
+// Stats returns cgroup statistics for the specified controllers.
+// If opts is nil or opts.Controllers is zero, statistics for all controllers are returned.
+func (m *LegacyManager) Stats(opts *cgroups.StatsOptions) (*cgroups.Stats, error) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
+
+	// Default: query all controllers (same as original GetStats behavior)
+	controllers := cgroups.GetAllControllers()
+	if opts != nil && opts.Controllers != 0 {
+		controllers = opts.Controllers
+	}
+
 	stats := cgroups.NewStats()
 	for _, sys := range legacySubsystems {
 		path := m.paths[sys.Name()]
 		if path == "" {
 			continue
 		}
+
+		// Filter based on controller type
+		if !cgroups.ShouldIncludeSubsystem(sys.Name(), controllers) {
+			continue
+		}
+
 		if err := sys.GetStats(path, stats); err != nil {
 			return nil, err
 		}
