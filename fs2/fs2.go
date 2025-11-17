@@ -155,6 +155,110 @@ func (m *Manager) GetStats() (*cgroups.Stats, error) {
 	return st, nil
 }
 
+func (m *Manager) AddCpuStats(stats *cgroups.Stats) error {
+	if stats == nil {
+		return errors.New(cgroups.ErrStatsNil)
+	}
+
+	if err := statCpu(m.dirPath, stats); err != nil && !os.IsNotExist(err) {
+		return err
+	}
+
+	var err error
+	if stats.CpuStats.PSI, err = statPSI(m.dirPath, "cpu.pressure"); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *Manager) AddMemoryStats(stats *cgroups.Stats) error {
+	if stats == nil {
+		return errors.New(cgroups.ErrStatsNil)
+	}
+	if stats.MemoryStats.Stats == nil {
+		return errors.New("stats.MemoryStats.Stats must not be nil")
+	}
+
+	if err := statMemory(m.dirPath, stats); err != nil && !os.IsNotExist(err) {
+		return err
+	}
+
+	var err error
+	if stats.MemoryStats.PSI, err = statPSI(m.dirPath, "memory.pressure"); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *Manager) AddPidsStats(stats *cgroups.Stats) error {
+	if stats == nil {
+		return errors.New(cgroups.ErrStatsNil)
+	}
+
+	return statPids(m.dirPath, stats)
+}
+
+func (m *Manager) AddIoStats(stats *cgroups.Stats) error {
+	if stats == nil {
+		return errors.New(cgroups.ErrStatsNil)
+	}
+
+	if err := statIo(m.dirPath, stats); err != nil && !os.IsNotExist(err) {
+		return err
+	}
+
+	var err error
+	if stats.BlkioStats.PSI, err = statPSI(m.dirPath, "io.pressure"); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (m *Manager) AddHugetlbStats(stats *cgroups.Stats) error {
+	if stats == nil {
+		return errors.New(cgroups.ErrStatsNil)
+	}
+	if stats.HugetlbStats == nil {
+		return errors.New("stats.HugetlbStats must not be nil")
+	}
+
+	err := statHugeTlb(m.dirPath, stats)
+	if err != nil && !os.IsNotExist(err) {
+		return err
+	}
+	return nil
+}
+
+func (m *Manager) AddRdmaStats(stats *cgroups.Stats) error {
+	if stats == nil {
+		return errors.New(cgroups.ErrStatsNil)
+	}
+
+	err := fscommon.RdmaGetStats(m.dirPath, stats)
+	if err != nil && !os.IsNotExist(err) {
+		return err
+	}
+	return nil
+}
+
+func (m *Manager) AddMiscStats(stats *cgroups.Stats) error {
+	if stats == nil {
+		return errors.New(cgroups.ErrStatsNil)
+	}
+	if stats.MiscStats == nil {
+		return errors.New("stats.MiscStats must not be nil")
+	}
+
+	err := statMisc(m.dirPath, stats)
+	if err != nil && !os.IsNotExist(err) {
+		return err
+	}
+	return nil
+}
+
 func (m *Manager) Freeze(state cgroups.FreezerState) error {
 	if m.config.Resources == nil {
 		return errors.New("cannot toggle freezer: cgroups not configured for container")
