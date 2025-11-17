@@ -44,6 +44,27 @@ type Manager interface {
 	// GetStats returns cgroups statistics.
 	GetStats() (*Stats, error)
 
+	// GetCpuStats returns cgroups cpu statistics
+	GetCpuStats() (*Stats, error)
+
+	// GetMemoryStats returns cgroups memory statistics
+	GetMemoryStats() (*Stats, error)
+
+	// GetPidsStats returns cgroups pids statistics
+	GetPidsStats() (*Stats, error)
+
+	// GetIoStats returns cgroups io statistics
+	GetIoStats() (*Stats, error)
+
+	// GetHugetlbStats returns cgroups hugetlb statistics
+	GetHugetlbStats() (*Stats, error)
+
+	// GetRdmaStats returns cgroups rdma statistics
+	GetRdmaStats() (*Stats, error)
+
+	// GetMiscStats returns cgroups misc statistics
+	GetMiscStats() (*Stats, error)
+
 	// Freeze sets the freezer cgroup to the specified state.
 	Freeze(state FreezerState) error
 
