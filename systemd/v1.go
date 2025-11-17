@@ -355,6 +355,111 @@ func (m *LegacyManager) GetStats() (*cgroups.Stats, error) {
 	return stats, nil
 }
 
+func (m *LegacyManager) GetCpuStats() (*cgroups.Stats, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	stats := cgroups.NewStats()
+
+	cpuGroup := &fs.CpuGroup{}
+	if path := m.paths["cpu"]; path != "" {
+		if err := cpuGroup.GetStats(path, stats); err != nil {
+			return nil, err
+		}
+	}
+
+	cpuacctGroup := &fs.CpuacctGroup{}
+	if path := m.paths["cpuacct"]; path != "" {
+		if err := cpuacctGroup.GetStats(path, stats); err != nil {
+			return nil, err
+		}
+	}
+
+	return stats, nil
+}
+
+func (m *LegacyManager) GetMemoryStats() (*cgroups.Stats, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	stats := cgroups.NewStats()
+
+	memoryGroup := &fs.MemoryGroup{}
+	if path := m.paths["memory"]; path != "" {
+		if err := memoryGroup.GetStats(path, stats); err != nil {
+			return nil, err
+		}
+	}
+
+	return stats, nil
+}
+
+func (m *LegacyManager) GetPidsStats() (*cgroups.Stats, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	stats := cgroups.NewStats()
+
+	pidsGroup := &fs.PidsGroup{}
+	if path := m.paths["pids"]; path != "" {
+		if err := pidsGroup.GetStats(path, stats); err != nil {
+			return nil, err
+		}
+	}
+
+	return stats, nil
+}
+
+func (m *LegacyManager) GetIoStats() (*cgroups.Stats, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	stats := cgroups.NewStats()
+
+	blkioGroup := &fs.BlkioGroup{}
+	if path := m.paths["blkio"]; path != "" {
+		if err := blkioGroup.GetStats(path, stats); err != nil {
+			return nil, err
+		}
+	}
+
+	return stats, nil
+}
+
+func (m *LegacyManager) GetHugetlbStats() (*cgroups.Stats, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	stats := cgroups.NewStats()
+
+	hugetlbGroup := &fs.HugetlbGroup{}
+	if path := m.paths["hugetlb"]; path != "" {
+		if err := hugetlbGroup.GetStats(path, stats); err != nil {
+			return nil, err
+		}
+	}
+
+	return stats, nil
+}
+
+func (m *LegacyManager) GetRdmaStats() (*cgroups.Stats, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	stats := cgroups.NewStats()
+
+	rdmaGroup := &fs.RdmaGroup{}
+	if path := m.paths["rdma"]; path != "" {
+		if err := rdmaGroup.GetStats(path, stats); err != nil {
+			return nil, err
+		}
+	}
+
+	return stats, nil
+}
+
+func (m *LegacyManager) GetMiscStats() (*cgroups.Stats, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	stats := cgroups.NewStats()
+
+	return stats, nil
+}
+
 func (m *LegacyManager) Set(r *cgroups.Resources) error {
 	if r == nil {
 		return nil

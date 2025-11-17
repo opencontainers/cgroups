@@ -497,6 +497,34 @@ func (m *UnifiedManager) GetStats() (*cgroups.Stats, error) {
 	return m.fsMgr.GetStats()
 }
 
+func (m *UnifiedManager) GetCpuStats() (*cgroups.Stats, error) {
+	return m.fsMgr.GetCpuStats()
+}
+
+func (m *UnifiedManager) GetMemoryStats() (*cgroups.Stats, error) {
+	return m.fsMgr.GetMemoryStats()
+}
+
+func (m *UnifiedManager) GetPidsStats() (*cgroups.Stats, error) {
+	return m.fsMgr.GetPidsStats()
+}
+
+func (m *UnifiedManager) GetIoStats() (*cgroups.Stats, error) {
+	return m.fsMgr.GetIoStats()
+}
+
+func (m *UnifiedManager) GetHugetlbStats() (*cgroups.Stats, error) {
+	return m.fsMgr.GetHugetlbStats()
+}
+
+func (m *UnifiedManager) GetRdmaStats() (*cgroups.Stats, error) {
+	return m.fsMgr.GetRdmaStats()
+}
+
+func (m *UnifiedManager) GetMiscStats() (*cgroups.Stats, error) {
+	return m.fsMgr.GetMiscStats()
+}
+
 func (m *UnifiedManager) Set(r *cgroups.Resources) error {
 	if r == nil {
 		return nil

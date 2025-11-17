@@ -155,6 +155,84 @@ func (m *Manager) GetStats() (*cgroups.Stats, error) {
 	return st, nil
 }
 
+func (m *Manager) GetCpuStats() (*cgroups.Stats, error) {
+	st := cgroups.NewStats()
+
+	if err := statCpu(m.dirPath, st); err != nil && !os.IsNotExist(err) {
+		return st, err
+	}
+
+	var err error
+	if st.CpuStats.PSI, err = statPSI(m.dirPath, "cpu.pressure"); err != nil {
+		return st, err
+	}
+
+	return st, nil
+}
+
+func (m *Manager) GetMemoryStats() (*cgroups.Stats, error) {
+	st := cgroups.NewStats()
+
+	if err := statMemory(m.dirPath, st); err != nil && !os.IsNotExist(err) {
+		return st, err
+	}
+
+	var err error
+	if st.MemoryStats.PSI, err = statPSI(m.dirPath, "memory.pressure"); err != nil {
+		return st, err
+	}
+
+	return st, nil
+}
+
+func (m *Manager) GetPidsStats() (*cgroups.Stats, error) {
+	st := cgroups.NewStats()
+	err := statPids(m.dirPath, st)
+	return st, err
+}
+
+func (m *Manager) GetIoStats() (*cgroups.Stats, error) {
+	st := cgroups.NewStats()
+
+	if err := statIo(m.dirPath, st); err != nil && !os.IsNotExist(err) {
+		return st, err
+	}
+
+	var err error
+	if st.BlkioStats.PSI, err = statPSI(m.dirPath, "io.pressure"); err != nil {
+		return st, err
+	}
+
+	return st, nil
+}
+
+func (m *Manager) GetHugetlbStats() (*cgroups.Stats, error) {
+	st := cgroups.NewStats()
+	err := statHugeTlb(m.dirPath, st)
+	if err != nil && !os.IsNotExist(err) {
+		return st, err
+	}
+	return st, nil
+}
+
+func (m *Manager) GetRdmaStats() (*cgroups.Stats, error) {
+	st := cgroups.NewStats()
+	err := fscommon.RdmaGetStats(m.dirPath, st)
+	if err != nil && !os.IsNotExist(err) {
+		return st, err
+	}
+	return st, nil
+}
+
+func (m *Manager) GetMiscStats() (*cgroups.Stats, error) {
+	st := cgroups.NewStats()
+	err := statMisc(m.dirPath, st)
+	if err != nil && !os.IsNotExist(err) {
+		return st, err
+	}
+	return st, nil
+}
+
 func (m *Manager) Freeze(state cgroups.FreezerState) error {
 	if m.config.Resources == nil {
 		return errors.New("cannot toggle freezer: cgroups not configured for container")
