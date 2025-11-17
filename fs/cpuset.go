@@ -54,6 +54,11 @@ func (s *CpusetGroup) Name() string {
 	return "cpuset"
 }
 
+// ID returns the controller ID for cpuset subsystem.
+func (s *CpusetGroup) ID() cgroups.Controller {
+	return cgroups.CPUSet
+}
+
 func (s *CpusetGroup) Apply(path string, r *cgroups.Resources, pid int) error {
 	return s.ApplyDir(path, r, pid)
 }
