@@ -24,7 +24,7 @@ jobs:
       checks: write # to allow the action to annotate code in the PR.
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 2
       - uses: actions/setup-go@v6
@@ -42,7 +42,7 @@ jobs:
   go-fix:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 2
       - uses: actions/setup-go@v6
@@ -56,7 +56,7 @@ jobs:
   codespell:
     runs-on: ubuntu-24.04
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
     - name: install deps
       # Use a known version of codespell.
       run: pip install --break-system-packages codespell==v2.4.1
@@ -66,13 +66,13 @@ jobs:
   space-at-eol:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
       - run: if git -P grep -I -n '\s$'; then echo "^^^ extra whitespace at EOL, please fix"; exit 1; fi
 
   deps:
     runs-on: ubuntu-24.04
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
     - uses: actions/setup-go@v6
       with:
         go-version: "${{ env.GO_VERSION }}"
