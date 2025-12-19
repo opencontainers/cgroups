@@ -22,6 +22,9 @@ const (
 	CgroupProcesses   = "cgroup.procs"
 	unifiedMountpoint = "/sys/fs/cgroup"
 	hybridMountpoint  = "/sys/fs/cgroup/unified"
+
+	// ErrStatsNil is returned when stats parameter is nil
+	ErrStatsNil = "stats must not be nil"
 )
 
 var (

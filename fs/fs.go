@@ -196,6 +196,138 @@ func (m *Manager) GetStats() (*cgroups.Stats, error) {
 	return stats, nil
 }
 
+func (m *Manager) AddCpuStats(stats *cgroups.Stats) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	if stats == nil {
+		return errors.New(cgroups.ErrStatsNil)
+	}
+
+	cpuGroup := &CpuGroup{}
+	if path := m.paths["cpu"]; path != "" {
+		if err := cpuGroup.GetStats(path, stats); err != nil {
+			return err
+		}
+	}
+
+	cpuacctGroup := &CpuacctGroup{}
+	if path := m.paths["cpuacct"]; path != "" {
+		if err := cpuacctGroup.GetStats(path, stats); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (m *Manager) AddMemoryStats(stats *cgroups.Stats) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	if stats == nil {
+		return errors.New(cgroups.ErrStatsNil)
+	}
+	if stats.MemoryStats.Stats == nil {
+		return errors.New("stats.MemoryStats.Stats must not be nil")
+	}
+
+	memoryGroup := &MemoryGroup{}
+	if path := m.paths["memory"]; path != "" {
+		if err := memoryGroup.GetStats(path, stats); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (m *Manager) AddPidsStats(stats *cgroups.Stats) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	if stats == nil {
+		return errors.New(cgroups.ErrStatsNil)
+	}
+
+	pidsGroup := &PidsGroup{}
+	if path := m.paths["pids"]; path != "" {
+		if err := pidsGroup.GetStats(path, stats); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (m *Manager) AddIoStats(stats *cgroups.Stats) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	if stats == nil {
+		return errors.New(cgroups.ErrStatsNil)
+	}
+
+	blkioGroup := &BlkioGroup{}
+	if path := m.paths["blkio"]; path != "" {
+		if err := blkioGroup.GetStats(path, stats); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (m *Manager) AddHugetlbStats(stats *cgroups.Stats) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	if stats == nil {
+		return errors.New(cgroups.ErrStatsNil)
+	}
+	if stats.HugetlbStats == nil {
+		return errors.New("stats.HugetlbStats must not be nil")
+	}
+
+	hugetlbGroup := &HugetlbGroup{}
+	if path := m.paths["hugetlb"]; path != "" {
+		if err := hugetlbGroup.GetStats(path, stats); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (m *Manager) AddRdmaStats(stats *cgroups.Stats) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	if stats == nil {
+		return errors.New(cgroups.ErrStatsNil)
+	}
+
+	rdmaGroup := &RdmaGroup{}
+	if path := m.paths["rdma"]; path != "" {
+		if err := rdmaGroup.GetStats(path, stats); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (m *Manager) AddMiscStats(stats *cgroups.Stats) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+
+	if stats == nil {
+		return errors.New(cgroups.ErrStatsNil)
+	}
+
+	return nil
+}
+
 func (m *Manager) Set(r *cgroups.Resources) error {
 	if r == nil {
 		return nil

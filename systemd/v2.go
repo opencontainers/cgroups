@@ -497,6 +497,55 @@ func (m *UnifiedManager) GetStats() (*cgroups.Stats, error) {
 	return m.fsMgr.GetStats()
 }
 
+func (m *UnifiedManager) AddCpuStats(stats *cgroups.Stats) error {
+	if stats == nil {
+		return errors.New(cgroups.ErrStatsNil)
+	}
+	return m.fsMgr.AddCpuStats(stats)
+}
+
+func (m *UnifiedManager) AddMemoryStats(stats *cgroups.Stats) error {
+	if stats == nil {
+		return errors.New(cgroups.ErrStatsNil)
+	}
+	return m.fsMgr.AddMemoryStats(stats)
+}
+
+func (m *UnifiedManager) AddPidsStats(stats *cgroups.Stats) error {
+	if stats == nil {
+		return errors.New(cgroups.ErrStatsNil)
+	}
+	return m.fsMgr.AddPidsStats(stats)
+}
+
+func (m *UnifiedManager) AddIoStats(stats *cgroups.Stats) error {
+	if stats == nil {
+		return errors.New(cgroups.ErrStatsNil)
+	}
+	return m.fsMgr.AddIoStats(stats)
+}
+
+func (m *UnifiedManager) AddHugetlbStats(stats *cgroups.Stats) error {
+	if stats == nil {
+		return errors.New(cgroups.ErrStatsNil)
+	}
+	return m.fsMgr.AddHugetlbStats(stats)
+}
+
+func (m *UnifiedManager) AddRdmaStats(stats *cgroups.Stats) error {
+	if stats == nil {
+		return errors.New(cgroups.ErrStatsNil)
+	}
+	return m.fsMgr.AddRdmaStats(stats)
+}
+
+func (m *UnifiedManager) AddMiscStats(stats *cgroups.Stats) error {
+	if stats == nil {
+		return errors.New(cgroups.ErrStatsNil)
+	}
+	return m.fsMgr.AddMiscStats(stats)
+}
+
 func (m *UnifiedManager) Set(r *cgroups.Resources) error {
 	if r == nil {
 		return nil
