@@ -481,3 +481,34 @@ func ConvertBlkIOToIOWeightValue(blkIoWeight uint16) uint64 {
 	}
 	return 1 + (uint64(blkIoWeight)-10)*9999/990
 }
+
+// GetAllControllers returns a bitmask of all available controllers.
+func GetAllControllers() Controller {
+	return CPU | Memory | Pids | IO | HugeTLB | RDMA | Misc | CPUSet
+}
+
+// ShouldIncludeSubsystem checks if a given subsystem should be included
+// based on the requested controllers bitmask.
+func ShouldIncludeSubsystem(name string, controllers Controller) bool {
+	switch name {
+	case "cpu", "cpuacct":
+		return controllers&CPU != 0
+	case "memory":
+		return controllers&Memory != 0
+	case "pids":
+		return controllers&Pids != 0
+	case "blkio":
+		return controllers&IO != 0
+	case "hugetlb":
+		return controllers&HugeTLB != 0
+	case "rdma":
+		return controllers&RDMA != 0
+	case "misc":
+		return controllers&Misc != 0
+	case "cpuset":
+		return controllers&CPUSet != 0
+	default:
+		// when not filtering (controllers == all)
+		return controllers == GetAllControllers()
+	}
+}

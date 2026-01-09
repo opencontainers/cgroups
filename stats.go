@@ -211,3 +211,50 @@ func NewStats() *Stats {
 	miscStats := make(map[string]MiscStats)
 	return &Stats{MemoryStats: memoryStats, HugetlbStats: hugetlbStats, MiscStats: miscStats}
 }
+
+// Controller represents a cgroup controller type for stats collection.
+type Controller int
+
+// Controller types for cgroup stats collection.
+const (
+	CPU Controller = 1 << iota
+	Memory
+	Pids
+	IO
+	HugeTLB
+	RDMA
+	Misc
+	CPUSet // v1 only
+)
+
+// String returns the controller name.
+func (c Controller) String() string {
+	switch c {
+	case CPU:
+		return "cpu"
+	case Memory:
+		return "memory"
+	case Pids:
+		return "pids"
+	case IO:
+		return "io"
+	case HugeTLB:
+		return "hugetlb"
+	case RDMA:
+		return "rdma"
+	case Misc:
+		return "misc"
+	case CPUSet:
+		return "cpuset"
+	default:
+		return "unknown"
+	}
+}
+
+// StatsOptions specifies which controllers to retrieve statistics for.
+type StatsOptions struct {
+	// Controllers is a bitmask of Controller values.
+	// If 0, all available controllers are queried (default behavior).
+	// Use Controller constants like: CPU | Memory | Pids
+	Controllers Controller
+}

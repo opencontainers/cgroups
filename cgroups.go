@@ -44,6 +44,10 @@ type Manager interface {
 	// GetStats returns cgroups statistics.
 	GetStats() (*Stats, error)
 
+	// Stats returns statistics for specified controllers.
+	// If opts is nil or opts.Controllers is 0, all controllers are queried.
+	Stats(opts *StatsOptions) (*Stats, error)
+
 	// Freeze sets the freezer cgroup to the specified state.
 	Freeze(state FreezerState) error
 
