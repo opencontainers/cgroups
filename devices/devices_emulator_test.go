@@ -202,7 +202,6 @@ c 10:200 rwm`,
 	}
 
 	for _, test := range tests {
-		test := test // capture range variable
 		t.Run(test.name, func(t *testing.T) {
 			list := bytes.NewBufferString(test.list)
 			emu, err := emulatorFromList(list)
@@ -741,7 +740,6 @@ func testDeviceEmulatorApply(t *testing.T, baseDefaultAllow bool) {
 	}
 
 	for _, test := range tests {
-		test := test
 		t.Run(test.name, func(t *testing.T) {
 			err := test.base.Apply(test.rule)
 			if err != nil && test.expected != nil {
@@ -1058,7 +1056,6 @@ func testDeviceEmulatorTransition(t *testing.T, sourceDefaultAllow bool) {
 	}
 
 	for _, test := range tests {
-		test := test
 		t.Run(test.name, func(t *testing.T) {
 			// If we are in black-list mode, we need to prepend the relevant
 			// clear-all rule (the expected rule lists are written with
@@ -1130,7 +1127,7 @@ c 10:200 rwm`
 
 	var r *deviceRule
 	var err error
-	for i := 0; i < b.N; i++ {
+	for b.Loop() {
 		s := bufio.NewScanner(strings.NewReader(list))
 		for s.Scan() {
 			line := s.Text()
