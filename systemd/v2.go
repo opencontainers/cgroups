@@ -497,6 +497,12 @@ func (m *UnifiedManager) GetStats() (*cgroups.Stats, error) {
 	return m.fsMgr.GetStats()
 }
 
+// Stats returns cgroup statistics for the specified controllers.
+// If opts is nil or opts.Controllers is zero, statistics for all controllers are returned.
+func (m *UnifiedManager) Stats(opts *cgroups.StatsOptions) (*cgroups.Stats, error) {
+	return m.fsMgr.Stats(opts)
+}
+
 func (m *UnifiedManager) Set(r *cgroups.Resources) error {
 	if r == nil {
 		return nil
