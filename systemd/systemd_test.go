@@ -3,6 +3,7 @@ package systemd
 import (
 	"os"
 	"reflect"
+	"strings"
 	"testing"
 
 	systemdDbus "github.com/coreos/go-systemd/v22/dbus"
@@ -94,6 +95,82 @@ func TestUnitExistsIgnored(t *testing.T) {
 		if err := pm.Apply(-1); err != nil {
 			t.Fatal(err)
 		}
+	}
+}
+
+func TestSetUnified(t *testing.T) {
+	if !IsRunningSystemd() {
+		t.Skip("Test requires systemd.")
+	}
+	if !cgroups.IsCgroup2UnifiedMode() {
+		t.Skip("Test requires cgroup v2.")
+	}
+	if os.Geteuid() != 0 {
+		t.Skip("Test requires root.")
+	}
+
+	testCases := []struct {
+		name     string
+		file     string
+		setVal   string
+		clearVal string
+	}{
+		{
+			name:     "memory.min",
+			file:     "memory.min",
+			setVal:   "4096",
+			clearVal: "0",
+		},
+		{
+			name:     "memory.low",
+			file:     "memory.low",
+			setVal:   "4096",
+			clearVal: "0",
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			config := &cgroups.Cgroup{
+				Parent: "system.slice",
+				Name:   "system-runc_test_set_unified_" + tc.name + ".slice",
+				Resources: &cgroups.Resources{
+					Unified: map[string]string{tc.file: tc.setVal},
+				},
+			}
+			m, err := NewUnifiedManager(config, "")
+			if err != nil {
+				t.Fatal(err)
+			}
+			t.Cleanup(func() { _ = m.Destroy() })
+
+			if err := m.Apply(-1); err != nil {
+				t.Fatal(err)
+			}
+			if err := m.Set(config.Resources); err != nil {
+				t.Fatal(err)
+			}
+
+			val, err := cgroups.ReadFile(m.Path(""), tc.file)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if v := strings.TrimSpace(val); v != tc.setVal {
+				t.Fatalf("after Set: expected %s=%s, got %q", tc.file, tc.setVal, v)
+			}
+
+			if err := m.SetUnified(map[string]string{tc.file: tc.clearVal}); err != nil {
+				t.Fatal(err)
+			}
+
+			val, err = cgroups.ReadFile(m.Path(""), tc.file)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if v := strings.TrimSpace(val); v != tc.clearVal {
+				t.Fatalf("after SetUnified: expected %s=%s, got %q", tc.file, tc.clearVal, v)
+			}
+		})
 	}
 }
 

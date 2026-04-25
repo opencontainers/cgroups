@@ -516,6 +516,19 @@ func (m *UnifiedManager) Set(r *cgroups.Resources) error {
 	return m.fsMgr.Set(r)
 }
 
+// SetUnified writes unified cgroup v2 resource values directly to cgroupfs,
+// bypassing systemd's SetUnitProperties. This avoids the side effect where
+// systemd may reset unrelated cgroup properties when processing a property
+// update via dbus.
+func (m *UnifiedManager) SetUnified(unified map[string]string) error {
+	for k, v := range unified {
+		if err := cgroups.WriteFileByLine(m.path, k, v); err != nil {
+			return fmt.Errorf("unable to set unified resource %q: %w", k, err)
+		}
+	}
+	return nil
+}
+
 func (m *UnifiedManager) GetPaths() map[string]string {
 	paths := make(map[string]string, 1)
 	paths[""] = m.path
