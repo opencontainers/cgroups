@@ -13,7 +13,7 @@ import (
 	"github.com/opencontainers/cgroups"
 )
 
-func setFreezer(dirPath string, state cgroups.FreezerState) error {
+func setFreezer(dirPath string, state cgroups.FreezerState) (retErr error) {
 	var stateStr string
 	switch state {
 	case cgroups.Undefined:
@@ -37,6 +37,17 @@ func setFreezer(dirPath string, state cgroups.FreezerState) error {
 		return fmt.Errorf("freezer not supported: %w", err)
 	}
 	defer fd.Close()
+
+	// If freezing fails (for example the freeze times out), reset the cgroup
+	// back to thawed so it is not left in a half-frozen state. This mirrors
+	// the cgroup v1 behaviour (see runc#2774).
+	if state == cgroups.Frozen {
+		defer func() {
+			if retErr != nil {
+				_ = cgroups.WriteFile(dirPath, "cgroup.freeze", "0")
+			}
+		}()
+	}
 
 	if _, err := fd.WriteString(stateStr); err != nil {
 		return err
