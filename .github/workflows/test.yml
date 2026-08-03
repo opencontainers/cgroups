@@ -15,14 +15,14 @@ permissions:
 
 jobs:
   cgroup-v2:
-    name: "cgroup v2 (Ubuntu 24.04)"
+    name: "cgroup v2 (Ubuntu 26.04)"
     timeout-minutes: 10
     strategy:
       fail-fast: false
       matrix:
         go-version: [1.24.x, 1.25.x]
         race: ["-race", ""]
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
 
     steps:
     - uses: actions/checkout@v7
@@ -34,7 +34,7 @@ jobs:
   cgroup-v1:
     name: "cgroup v1 (AlmaLinux 8)"
     timeout-minutes: 20
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     steps:
     - uses: actions/checkout@v7
 
@@ -63,6 +63,6 @@ jobs:
     needs:
       - cgroup-v2
       - cgroup-v1
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     steps:
     - run: echo "All jobs completed"
