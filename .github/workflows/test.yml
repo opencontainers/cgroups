@@ -33,7 +33,7 @@ jobs:
       with:
         go-version: ${{ matrix.go-version }}
         go-version-file: go.mod # Take version from go.mod when go-version is empty.
-    - run: go test -timeout 3m ${{ matrix.race }} -v ./...
+    - run: CGROUPS_ALLOW_UNSAFE_TESTS=true go test -timeout 3m ${{ matrix.race }} -v ./...
 
   cgroup-v1:
     name: "cgroup v1 (AlmaLinux 8)"
@@ -61,7 +61,7 @@ jobs:
         lima sudo dnf install -y golang
 
     - name: "Run unit tests"
-      run: LIMA_WORKDIR=/tmp/cgroups lima sudo GOTOOLCHAIN=auto go test -v ./...
+      run: LIMA_WORKDIR=/tmp/cgroups lima sudo GOTOOLCHAIN=auto CGROUPS_ALLOW_UNSAFE_TESTS=true go test -v ./...
 
   all-done:
     needs:
