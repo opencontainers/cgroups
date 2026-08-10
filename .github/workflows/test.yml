@@ -20,7 +20,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        go-version: [1.24.x, 1.25.x]
+        go-version:
+          - "" # Use go-version-file (see https://github.com/actions/setup-go/issues/450#issuecomment-3620402646).
+          - oldstable
+          - stable
         race: ["-race", ""]
     runs-on: ubuntu-26.04
 
@@ -29,6 +32,7 @@ jobs:
     - uses: actions/setup-go@v7
       with:
         go-version: ${{ matrix.go-version }}
+        go-version-file: go.mod # Take version from go.mod when go-version is empty.
     - run: go test -timeout 3m ${{ matrix.race }} -v ./...
 
   cgroup-v1:
