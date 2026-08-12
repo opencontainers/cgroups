@@ -15,26 +15,30 @@ permissions:
 
 jobs:
   cgroup-v2:
-    name: "cgroup v2 (Ubuntu 24.04)"
+    name: "cgroup v2 (Ubuntu 26.04)"
     timeout-minutes: 10
     strategy:
       fail-fast: false
       matrix:
-        go-version: [1.24.x, 1.25.x]
+        go-version:
+          - "" # Use go-version-file (see https://github.com/actions/setup-go/issues/450#issuecomment-3620402646).
+          - oldstable
+          - stable
         race: ["-race", ""]
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
 
     steps:
     - uses: actions/checkout@v7
     - uses: actions/setup-go@v7
       with:
         go-version: ${{ matrix.go-version }}
+        go-version-file: go.mod # Take version from go.mod when go-version is empty.
     - run: go test -timeout 3m ${{ matrix.race }} -v ./...
 
   cgroup-v1:
     name: "cgroup v1 (AlmaLinux 8)"
     timeout-minutes: 20
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     steps:
     - uses: actions/checkout@v7
 
@@ -63,6 +67,6 @@ jobs:
     needs:
       - cgroup-v2
       - cgroup-v1
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     steps:
     - run: echo "All jobs completed"
