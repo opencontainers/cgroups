@@ -11,6 +11,10 @@ func TestParallelConnection(t *testing.T) {
 	if !IsRunningSystemd() {
 		t.Skip("Test requires systemd.")
 	}
+	if _, ok := os.LookupEnv("CGROUPS_ALLOW_UNSAFE_TESTS"); !ok {
+		t.Skip("skipping unsafe test (can kill your desktop session); " +
+			"set CGROUPS_ALLOW_UNSAFE_TESTS=true to enable")
+	}
 	var dms []*dbusConnManager
 	for range 600 {
 		dms = append(dms, newDbusConnManager(os.Geteuid() != 0))
