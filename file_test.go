@@ -6,8 +6,13 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
+	"sync"
+	"syscall"
 	"testing"
 	"time"
+
+	"golang.org/x/sys/unix"
 )
 
 func TestWriteCgroupFileHandlesInterrupt(t *testing.T) {
@@ -67,6 +72,77 @@ func TestOpenat2(t *testing.T) {
 			t.Errorf("case %+v: %v", tc, err)
 		}
 		fd.Close()
+	}
+}
+
+func TestCgroupRootHandleOpenedToAnotherFile(t *testing.T) {
+	const (
+		memoryCgroupMount = "/sys/fs/cgroup/memory"
+		memoryLimit       = "memory.limit_in_bytes"
+	)
+	if _, err := os.Stat(memoryCgroupMount); err != nil {
+		// most probably cgroupv2
+		t.Skip(err)
+	}
+
+	cgroupName := fmt.Sprintf("test-eano-%d", time.Now().Nanosecond())
+	cgroupPath := filepath.Join(memoryCgroupMount, cgroupName)
+	if err := os.MkdirAll(cgroupPath, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(cgroupPath)
+
+	if _, err := os.Stat(filepath.Join(cgroupPath, memoryLimit)); err != nil {
+		// either cgroupv2, or memory controller is not available
+		t.Skip(err)
+	}
+
+	// The cgroupRootHandle is opened when the openFile is called.
+	if _, err := openFile(cgroupfsDir, filepath.Join("memory", cgroupName, memoryLimit), os.O_RDONLY); err != nil {
+		t.Fatal(err)
+	}
+
+	// Make sure the cgroupRootHandle is opened to another file.
+	if err := syscall.Close(int(cgroupRootHandle.Fd())); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := unix.Openat2(-1, "/tmp", &unix.OpenHow{Flags: unix.O_DIRECTORY | unix.O_PATH | unix.O_CLOEXEC}); err != nil {
+		t.Fatal(err)
+	}
+
+	var readErr *error
+	readErrLock := sync.Mutex{}
+	errCount := 0
+
+	// The openFile returns error (may be multiple times) and the prepOnce is reset only once.
+	var wg sync.WaitGroup
+	for i := 0; i < 100; i++ {
+		wg.Add(1)
+		go func(i int) {
+			defer wg.Done()
+			_, err := openFile(cgroupfsDir, filepath.Join("memory", cgroupName, memoryLimit), os.O_RDONLY)
+			t.Logf("openFile attempt %d: %v\n", i, err)
+			if err != nil {
+				readErrLock.Lock()
+				readErr = &err
+				errCount++
+				readErrLock.Unlock()
+			}
+		}(i)
+	}
+	wg.Wait()
+
+	if errCount == 0 {
+		t.Fatal("At least one openFile should fail")
+	}
+
+	if !strings.Contains((*readErr).Error(), "unexpectedly opened to") {
+		t.Fatalf("openFile should fail with 'cgroupRootHandle %d unexpectedly opened to <another file>'", cgroupRootHandle.Fd())
+	}
+
+	// The openFile should work after prepOnce is reset because the cgroupRootHandle is updated.
+	if _, err := openFile(cgroupfsDir, filepath.Join("memory", cgroupName, memoryLimit), os.O_RDONLY); err != nil {
+		t.Fatal(err)
 	}
 }
 
