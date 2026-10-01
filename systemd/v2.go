@@ -27,6 +27,8 @@ const (
 	allowedCPUsSupportedVersion    = 244 // AllowedCPUs=, AllowedMemoryNodes=
 	cpuIdleSupportedVersion        = 252 // CPUWeight=idle (see NEWS for v252)
 	oomPolicySupportedVersion      = 253 // OOMPolicy= for scopes (see systemd.scope.xml)
+	zswapMaxSupportedVersion       = 253 // MemoryZSwapMax=
+	zswapWritebackSupportedVersion = 256 // MemoryZSwapWriteback=
 )
 
 type UnifiedManager struct {
@@ -171,6 +173,29 @@ func unifiedResToSystemdProps(cm *dbusConnManager, res map[string]string) (props
 			}
 			props = append(props,
 				newProp(m[k], num))
+
+		case "memory.zswap.max":
+			num, err := strconv.ParseUint(v, 10, 64)
+			if err != nil {
+				return nil, fmt.Errorf("invalid %s=%q, expected a number", k, v)
+			}
+			if sdVer := systemdVersion(cm); sdVer < zswapMaxSupportedVersion {
+				logrus.Debugf("systemd v%d does not support MemoryZSwapMax", sdVer)
+				continue
+			}
+			props = append(props,
+				newProp("MemoryZSwapMax", num))
+
+		case "memory.zswap.writeback":
+			if v != "0" && v != "1" {
+				return nil, fmt.Errorf("invalid %s=%q, expected 0 or 1", k, v)
+			}
+			if sdVer := systemdVersion(cm); sdVer < zswapWritebackSupportedVersion {
+				logrus.Debugf("systemd v%d does not support MemoryZSwapWriteback", sdVer)
+				continue
+			}
+			props = append(props,
+				newProp("MemoryZSwapWriteback", v == "1"))
 
 		case "pids.max":
 			num := uint64(math.MaxUint64)

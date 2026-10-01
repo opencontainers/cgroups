@@ -165,6 +165,74 @@ func TestUnifiedResToSystemdProps(t *testing.T) {
 				"memory.oom.group": "1",
 			},
 		},
+		{
+			name:   "memory.zswap.max=0",
+			minVer: zswapMaxSupportedVersion,
+			res: map[string]string{
+				"memory.zswap.max": "0",
+			},
+			expProps: []systemdDbus.Property{
+				newProp("MemoryZSwapMax", uint64(0)),
+			},
+		},
+		{
+			name:   "memory.zswap.max=1048576",
+			minVer: zswapMaxSupportedVersion,
+			res: map[string]string{
+				"memory.zswap.max": "1048576",
+			},
+			expProps: []systemdDbus.Property{
+				newProp("MemoryZSwapMax", uint64(1048576)),
+			},
+		},
+		{
+			name: "memory.zswap.max=max",
+			res: map[string]string{
+				"memory.zswap.max": "max",
+			},
+			expError: true,
+		},
+		{
+			name: "memory.zswap.max invalid",
+			res: map[string]string{
+				"memory.zswap.max": "1G",
+			},
+			expError: true,
+		},
+		{
+			name:   "memory.zswap.writeback=0",
+			minVer: zswapWritebackSupportedVersion,
+			res: map[string]string{
+				"memory.zswap.writeback": "0",
+			},
+			expProps: []systemdDbus.Property{
+				newProp("MemoryZSwapWriteback", false),
+			},
+		},
+		{
+			name:   "memory.zswap.writeback=1",
+			minVer: zswapWritebackSupportedVersion,
+			res: map[string]string{
+				"memory.zswap.writeback": "1",
+			},
+			expProps: []systemdDbus.Property{
+				newProp("MemoryZSwapWriteback", true),
+			},
+		},
+		{
+			name: "memory.zswap.writeback=2",
+			res: map[string]string{
+				"memory.zswap.writeback": "2",
+			},
+			expError: true,
+		},
+		{
+			name: "memory.zswap.writeback invalid",
+			res: map[string]string{
+				"memory.zswap.writeback": "true",
+			},
+			expError: true,
+		},
 	}
 
 	for _, tc := range testCases {
