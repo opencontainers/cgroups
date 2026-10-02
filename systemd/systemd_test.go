@@ -1,6 +1,7 @@
 package systemd
 
 import (
+	"math"
 	"os"
 	"os/exec"
 	"reflect"
@@ -287,6 +288,37 @@ func TestAddCPUQuota(t *testing.T) {
 			period:                     900000,
 			expectedCPUQuotaPerSecUSec: 560000,
 			expectedQuota:              504000,
+		},
+		{
+			name:                       "Large quota with round up",
+			quota:                      10000000000001,
+			expectedCPUQuotaPerSecUSec: 100000000010000,
+			expectedQuota:              10000000001000,
+		},
+		{
+			name:                       "Max quota",
+			quota:                      maxCPUQuota,
+			period:                     1500,
+			expectedCPUQuotaPerSecUSec: 11728124029610000,
+			expectedQuota:              maxCPUQuota,
+		},
+		{
+			name:                       "Max quota, round up above max",
+			quota:                      maxCPUQuota,
+			expectedCPUQuotaPerSecUSec: math.MaxUint64,
+			expectedQuota:              -1,
+		},
+		{
+			name:                       "Quota too large",
+			quota:                      maxCPUQuota + 1,
+			expectedCPUQuotaPerSecUSec: math.MaxUint64,
+			expectedQuota:              -1,
+		},
+		{
+			name:                       "Max int64 quota",
+			quota:                      math.MaxInt64,
+			expectedCPUQuotaPerSecUSec: math.MaxUint64,
+			expectedQuota:              -1,
 		},
 	}
 
