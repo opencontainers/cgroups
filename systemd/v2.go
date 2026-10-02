@@ -19,9 +19,14 @@ import (
 	"github.com/opencontainers/cgroups/fs2"
 )
 
+// Minimum systemd versions supporting some unit properties. Unless noted
+// otherwise, these are from "Added in version" notes in
+// https://github.com/systemd/systemd/blob/v262/man/systemd.resource-control.xml
 const (
-	cpuIdleSupportedVersion   = 252
-	oomPolicySupportedVersion = 253
+	cpuQuotaPeriodSupportedVersion = 242 // CPUQuotaPeriodSec=
+	allowedCPUsSupportedVersion    = 244 // AllowedCPUs=, AllowedMemoryNodes=
+	cpuIdleSupportedVersion        = 252 // CPUWeight=idle (see NEWS for v252)
+	oomPolicySupportedVersion      = 253 // OOMPolicy= for scopes (see systemd.scope.xml)
 )
 
 type UnifiedManager struct {
@@ -139,9 +144,8 @@ func unifiedResToSystemdProps(cm *dbusConnManager, res map[string]string) (props
 				"cpuset.cpus": "AllowedCPUs",
 				"cpuset.mems": "AllowedMemoryNodes",
 			}
-			// systemd only supports these properties since v244
 			sdVer := systemdVersion(cm)
-			if sdVer >= 244 {
+			if sdVer >= allowedCPUsSupportedVersion {
 				props = append(props,
 					newProp(m[k], bits))
 			} else {
