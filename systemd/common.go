@@ -299,9 +299,8 @@ func systemdVersionAtoi(str string) (int, error) {
 // along with round-up during calculation in order to write the same value to cgroupfs later.
 func addCPUQuota(cm *dbusConnManager, properties *[]systemdDbus.Property, quota *int64, period uint64) {
 	if period != 0 {
-		// systemd only supports CPUQuotaPeriodUSec since v242
 		sdVer := systemdVersion(cm)
-		if sdVer >= 242 {
+		if sdVer >= cpuQuotaPeriodSupportedVersion {
 			*properties = append(*properties,
 				newProp("CPUQuotaPeriodUSec", period))
 		} else {
@@ -338,9 +337,8 @@ func addCpuset(cm *dbusConnManager, props *[]systemdDbus.Property, cpus, mems st
 		return nil
 	}
 
-	// systemd only supports AllowedCPUs/AllowedMemoryNodes since v244
 	sdVer := systemdVersion(cm)
-	if sdVer < 244 {
+	if sdVer < allowedCPUsSupportedVersion {
 		logrus.Debugf("systemd v%d is too old to support AllowedCPUs/AllowedMemoryNodes"+
 			" (settings will still be applied to cgroupfs)", sdVer)
 		return nil
