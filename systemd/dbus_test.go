@@ -29,9 +29,7 @@ func TestParallelConnection(t *testing.T) {
 		errCh   = make(chan error, 1)
 	)
 	for _, dm := range dms {
-		doneWg.Add(1)
-		go func(dm *dbusConnManager) {
-			defer doneWg.Done()
+		doneWg.Go(func() {
 			select {
 			case <-ctx.Done():
 				return
@@ -46,7 +44,7 @@ func TestParallelConnection(t *testing.T) {
 					cancel()
 				}
 			}
-		}(dm)
+		})
 	}
 	close(startCh) // trigger all connection attempts
 	doneWg.Wait()
