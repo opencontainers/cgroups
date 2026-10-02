@@ -90,7 +90,7 @@ jobs:
         advanced-security: false
         annotations: true
 
-  all-done:
+  all-done-validate:
     needs:
       - codespell
       - deps
