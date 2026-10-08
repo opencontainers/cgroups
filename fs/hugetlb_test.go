@@ -28,6 +28,8 @@ const (
 )
 
 func TestHugetlbSetHugetlb(t *testing.T) {
+	skipNoHugePages(t)
+
 	path := tempDir(t, "hugetlb")
 
 	const (
@@ -70,6 +72,8 @@ func TestHugetlbSetHugetlb(t *testing.T) {
 }
 
 func TestHugetlbStats(t *testing.T) {
+	skipNoHugePages(t)
+
 	path := tempDir(t, "hugetlb")
 	for _, pageSize := range cgroups.HugePageSizes() {
 		writeFileContents(t, path, map[string]string{
@@ -92,6 +96,8 @@ func TestHugetlbStats(t *testing.T) {
 }
 
 func TestHugetlbRStatsRsvd(t *testing.T) {
+	skipNoHugePages(t)
+
 	path := tempDir(t, "hugetlb")
 	for _, pageSize := range cgroups.HugePageSizes() {
 		writeFileContents(t, path, map[string]string{
@@ -114,6 +120,8 @@ func TestHugetlbRStatsRsvd(t *testing.T) {
 }
 
 func TestHugetlbStatsNoUsageFile(t *testing.T) {
+	skipNoHugePages(t)
+
 	path := tempDir(t, "hugetlb")
 	writeFileContents(t, path, map[string]string{
 		maxUsage: hugetlbMaxUsageContents,
@@ -128,6 +136,8 @@ func TestHugetlbStatsNoUsageFile(t *testing.T) {
 }
 
 func TestHugetlbStatsNoMaxUsageFile(t *testing.T) {
+	skipNoHugePages(t)
+
 	path := tempDir(t, "hugetlb")
 	for _, pageSize := range cgroups.HugePageSizes() {
 		writeFileContents(t, path, map[string]string{
@@ -144,6 +154,8 @@ func TestHugetlbStatsNoMaxUsageFile(t *testing.T) {
 }
 
 func TestHugetlbStatsBadUsageFile(t *testing.T) {
+	skipNoHugePages(t)
+
 	path := tempDir(t, "hugetlb")
 	for _, pageSize := range cgroups.HugePageSizes() {
 		writeFileContents(t, path, map[string]string{
@@ -161,6 +173,8 @@ func TestHugetlbStatsBadUsageFile(t *testing.T) {
 }
 
 func TestHugetlbStatsBadMaxUsageFile(t *testing.T) {
+	skipNoHugePages(t)
+
 	path := tempDir(t, "hugetlb")
 	writeFileContents(t, path, map[string]string{
 		usage:    hugetlbUsageContents,
@@ -172,5 +186,14 @@ func TestHugetlbStatsBadMaxUsageFile(t *testing.T) {
 	err := hugetlb.GetStats(path, &actualStats)
 	if err == nil {
 		t.Fatal("Expected failure")
+	}
+}
+
+// skipNoHugePages skips the test if the system has no huge page sizes
+// available, as in this case [HugetlbGroup] methods are no-ops.
+func skipNoHugePages(t *testing.T) {
+	t.Helper()
+	if len(cgroups.HugePageSizes()) == 0 {
+		t.Skip("no huge page sizes available")
 	}
 }
