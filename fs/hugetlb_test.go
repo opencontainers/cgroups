@@ -123,9 +123,11 @@ func TestHugetlbStatsNoUsageFile(t *testing.T) {
 	skipNoHugePages(t)
 
 	path := tempDir(t, "hugetlb")
-	writeFileContents(t, path, map[string]string{
-		maxUsage: hugetlbMaxUsageContents,
-	})
+	for _, pageSize := range cgroups.HugePageSizes() {
+		writeFileContents(t, path, map[string]string{
+			fmt.Sprintf(maxUsage, pageSize): hugetlbMaxUsageContents,
+		})
+	}
 
 	hugetlb := &HugetlbGroup{}
 	actualStats := *cgroups.NewStats()
@@ -159,8 +161,8 @@ func TestHugetlbStatsBadUsageFile(t *testing.T) {
 	path := tempDir(t, "hugetlb")
 	for _, pageSize := range cgroups.HugePageSizes() {
 		writeFileContents(t, path, map[string]string{
-			fmt.Sprintf(usage, pageSize): "bad",
-			maxUsage:                     hugetlbMaxUsageContents,
+			fmt.Sprintf(usage, pageSize):    "bad",
+			fmt.Sprintf(maxUsage, pageSize): hugetlbMaxUsageContents,
 		})
 	}
 
@@ -176,10 +178,12 @@ func TestHugetlbStatsBadMaxUsageFile(t *testing.T) {
 	skipNoHugePages(t)
 
 	path := tempDir(t, "hugetlb")
-	writeFileContents(t, path, map[string]string{
-		usage:    hugetlbUsageContents,
-		maxUsage: "bad",
-	})
+	for _, pageSize := range cgroups.HugePageSizes() {
+		writeFileContents(t, path, map[string]string{
+			fmt.Sprintf(usage, pageSize):    hugetlbUsageContents,
+			fmt.Sprintf(maxUsage, pageSize): "bad",
+		})
+	}
 
 	hugetlb := &HugetlbGroup{}
 	actualStats := *cgroups.NewStats()
