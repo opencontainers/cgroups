@@ -260,7 +260,9 @@ func genV2ResourcesProperties(dirPath string, r *cgroups.Resources, cm *dbusConn
 	if err != nil {
 		return nil, err
 	}
-	if swap != 0 {
+	if swap != 0 || r.MemorySwap > 0 {
+		// swap == 0 && r.MemorySwap > 0: memory and memorySwap
+		// set to the same value -- disable swap.
 		properties = append(properties,
 			newProp("MemorySwapMax", uint64(swap)))
 	}
