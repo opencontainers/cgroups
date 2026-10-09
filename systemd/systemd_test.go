@@ -1,6 +1,8 @@
 package systemd
 
 import (
+	"maps"
+	"math"
 	"os"
 	"os/exec"
 	"reflect"
@@ -115,6 +117,7 @@ func TestUnifiedResToSystemdProps(t *testing.T) {
 		res      map[string]string
 		expError bool
 		expProps []systemdDbus.Property
+		resAfter map[string]string // If nil, res is expected to be unchanged.
 	}{
 		{
 			name: "empty map",
@@ -233,12 +236,80 @@ func TestUnifiedResToSystemdProps(t *testing.T) {
 			},
 			expError: true,
 		},
+		{
+			name:   "cpu.max",
+			minVer: cpuQuotaPeriodSupportedVersion,
+			res: map[string]string{
+				"cpu.max": "500000 1000000",
+			},
+			expProps: []systemdDbus.Property{
+				newProp("CPUQuotaPeriodUSec", uint64(1000000)),
+				newProp("CPUQuotaPerSecUSec", uint64(500000)),
+			},
+		},
+		{
+			name:   "cpu.max with round up",
+			minVer: cpuQuotaPeriodSupportedVersion,
+			res: map[string]string{
+				"cpu.max": "123456 100000",
+			},
+			expProps: []systemdDbus.Property{
+				newProp("CPUQuotaPeriodUSec", uint64(100000)),
+				newProp("CPUQuotaPerSecUSec", uint64(1240000)),
+			},
+			resAfter: map[string]string{
+				"cpu.max": "124000 100000",
+			},
+		},
+		{
+			name:   "cpu.max with round up, no period",
+			minVer: cpuQuotaPeriodSupportedVersion,
+			res: map[string]string{
+				"cpu.max": "123456",
+			},
+			expProps: []systemdDbus.Property{
+				newProp("CPUQuotaPeriodUSec", uint64(100000)),
+				newProp("CPUQuotaPerSecUSec", uint64(1240000)),
+			},
+			resAfter: map[string]string{
+				"cpu.max": "124000",
+			},
+		},
+		{
+			name:   "cpu.max too large",
+			minVer: cpuQuotaPeriodSupportedVersion,
+			res: map[string]string{
+				"cpu.max": "9223372036854700 100000",
+			},
+			expProps: []systemdDbus.Property{
+				newProp("CPUQuotaPeriodUSec", uint64(100000)),
+				newProp("CPUQuotaPerSecUSec", uint64(math.MaxUint64)),
+			},
+			resAfter: map[string]string{
+				"cpu.max": "max 100000",
+			},
+		},
+		{
+			name:   "cpu.max=max",
+			minVer: cpuQuotaPeriodSupportedVersion,
+			res: map[string]string{
+				"cpu.max": "max 100000",
+			},
+			expProps: []systemdDbus.Property{
+				newProp("CPUQuotaPeriodUSec", uint64(100000)),
+				newProp("CPUQuotaPerSecUSec", uint64(math.MaxUint64)),
+			},
+		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			if tc.minVer != 0 && systemdVersion(cm) < tc.minVer {
 				t.Skipf("requires systemd >= %d", tc.minVer)
+			}
+			resAfter := tc.resAfter
+			if resAfter == nil {
+				resAfter = maps.Clone(tc.res)
 			}
 			props, err := unifiedResToSystemdProps(cm, tc.res)
 			if err != nil && !tc.expError {
@@ -249,6 +320,9 @@ func TestUnifiedResToSystemdProps(t *testing.T) {
 			}
 			if !reflect.DeepEqual(tc.expProps, props) {
 				t.Errorf("wrong properties (exp %+v, got %+v)", tc.expProps, props)
+			}
+			if !maps.Equal(resAfter, tc.res) {
+				t.Errorf("wrong resources (exp %+v, got %+v)", resAfter, tc.res)
 			}
 		})
 	}
@@ -287,6 +361,37 @@ func TestAddCPUQuota(t *testing.T) {
 			period:                     900000,
 			expectedCPUQuotaPerSecUSec: 560000,
 			expectedQuota:              504000,
+		},
+		{
+			name:                       "Large quota with round up",
+			quota:                      10000000000001,
+			expectedCPUQuotaPerSecUSec: 100000000010000,
+			expectedQuota:              10000000001000,
+		},
+		{
+			name:                       "Max quota",
+			quota:                      maxCPUQuota,
+			period:                     1500,
+			expectedCPUQuotaPerSecUSec: 11728124029610000,
+			expectedQuota:              maxCPUQuota,
+		},
+		{
+			name:                       "Max quota, round up above max",
+			quota:                      maxCPUQuota,
+			expectedCPUQuotaPerSecUSec: math.MaxUint64,
+			expectedQuota:              -1,
+		},
+		{
+			name:                       "Quota too large",
+			quota:                      maxCPUQuota + 1,
+			expectedCPUQuotaPerSecUSec: math.MaxUint64,
+			expectedQuota:              -1,
+		},
+		{
+			name:                       "Max int64 quota",
+			quota:                      math.MaxInt64,
+			expectedCPUQuotaPerSecUSec: math.MaxUint64,
+			expectedQuota:              -1,
 		},
 	}
 
