@@ -1,11 +1,8 @@
 package systemd
 
 import (
-	"bufio"
-	"errors"
 	"fmt"
 	"math"
-	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -17,6 +14,7 @@ import (
 
 	"github.com/opencontainers/cgroups"
 	"github.com/opencontainers/cgroups/fs2"
+	"github.com/opencontainers/cgroups/internal/delegate"
 )
 
 // Minimum systemd versions supporting some unit properties. Unless noted
@@ -395,51 +393,12 @@ func (m *UnifiedManager) Apply(pid int) error {
 	}
 
 	if c.OwnerUID != nil {
-		// The directory itself must be chowned.
-		err := os.Chown(m.path, *c.OwnerUID, -1)
-		if err != nil {
+		if err := delegate.Chown(m.path, *c.OwnerUID); err != nil {
 			return err
-		}
-
-		filesToChown, err := cgroupFilesToChown()
-		if err != nil {
-			return err
-		}
-
-		for _, v := range filesToChown {
-			err := os.Chown(m.path+"/"+v, *c.OwnerUID, -1)
-			// Some files might not be present.
-			if err != nil && !errors.Is(err, os.ErrNotExist) {
-				return err
-			}
 		}
 	}
 
 	return nil
-}
-
-// The kernel exposes a list of files that should be chowned to the delegate
-// uid in /sys/kernel/cgroup/delegate.  If the file is not present
-// (Linux < 4.15), use the initial values mentioned in cgroups(7).
-func cgroupFilesToChown() ([]string, error) {
-	const cgroupDelegateFile = "/sys/kernel/cgroup/delegate"
-
-	f, err := os.Open(cgroupDelegateFile)
-	if err != nil {
-		return []string{"cgroup.procs", "cgroup.subtree_control", "cgroup.threads"}, nil
-	}
-	defer f.Close()
-
-	filesToChown := []string{}
-	scanner := bufio.NewScanner(f)
-	for scanner.Scan() {
-		filesToChown = append(filesToChown, scanner.Text())
-	}
-	if err := scanner.Err(); err != nil {
-		return nil, fmt.Errorf("error reading %s: %w", cgroupDelegateFile, err)
-	}
-
-	return filesToChown, nil
 }
 
 // AddPid adds a process with a given pid to an existing cgroup.
