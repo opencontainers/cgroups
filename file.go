@@ -101,6 +101,7 @@ var (
 
 	cgroupRootHandle *os.File
 	prepOnce         sync.Once
+	resetOnce        sync.Once
 	prepErr          error
 	resolveFlags     uint64
 )
@@ -134,6 +135,9 @@ func prepareOpenat2() error {
 			// cgroupv2 has a single mountpoint and no "cpu,cpuacct" symlinks
 			resolveFlags |= unix.RESOLVE_NO_XDEV | unix.RESOLVE_NO_SYMLINKS
 		}
+
+		// Make resetOnce ready for the next time to reset prepOnce.
+		resetOnce = sync.Once{}
 	})
 
 	return prepErr
@@ -170,11 +174,14 @@ func openFile(dir, file string, flags int) (*os.File, error) {
 		// (happens when this package is incorrectly used
 		// across the chroot/pivot_root/mntns boundary, or
 		// when /sys/fs/cgroup is remounted).
-		//
-		// TODO: if such usage will ever be common, amend this
-		// to reopen cgroupRootHandle and retry openat2.
 		fdDest, fdErr := os.Readlink("/proc/thread-self/fd/" + strconv.Itoa(int(cgroupRootHandle.Fd())))
 		if fdErr == nil && fdDest != cgroupfsDir {
+			// Only reset prepOnce once when the cgroupRootHandle is opened to another location.
+			resetOnce.Do(func() {
+				// It is difficult to recover the cgroupRootHandle in this case,
+				// so we reset prepOnce to reopen the cgroupRootHandle and retry openat2.
+				prepOnce = sync.Once{}
+			})
 			// Wrap the error so it is clear that cgroupRootHandle
 			// is opened to an unexpected/wrong directory.
 			err = fmt.Errorf("cgroupRootHandle %d unexpectedly opened to %s != %s: %w",
