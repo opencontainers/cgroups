@@ -8,3 +8,6 @@ updates:
     directory: "/"
     schedule:
       interval: "daily"
+    ignore:
+      # Used by review-policy.yml. Bump manually, as it may change the rules.
+      - dependency-name: "opencontainers/runc"
