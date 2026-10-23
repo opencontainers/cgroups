@@ -1,0 +1,23 @@
+# Enforce the pull request merge rules described in MAINTAINERS_GUIDE.md
+# ("Who decides what?"). This job is a required status check.
+#
+# The actual check is in the runc repository; see the comments there for
+# details. Always pin it to a commit SHA. It is not bumped by dependabot
+# (see dependabot.yml), since a bump may change the merge rules.
+#
+# As with any pull_request_review workflow, this file is run from the pull
+# request, so a pull request can change it. Therefore it is a governance file,
+# and changes to it must be reviewed carefully.
+name: review-policy
+on:
+  pull_request_review:
+    types: [submitted, edited, dismissed]
+
+permissions: {}
+
+jobs:
+  review-policy:
+    permissions:
+      contents: read
+      pull-requests: read
+    uses: opencontainers/runc/.github/workflows/review-policy.yml@c9232a3698424b71706c4d802a4395c3734cbcaf
