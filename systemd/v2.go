@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"errors"
 	"fmt"
+	"maps"
 	"math"
 	"os"
 	"path/filepath"
@@ -76,6 +77,8 @@ func shouldSetCPUIdle(cm *dbusConnManager, v string) bool {
 // For the list of keys, see https://www.kernel.org/doc/Documentation/cgroup-v2.txt
 //
 // For the list of systemd unit properties, see systemd.resource-control(5).
+//
+// The value of res["cpu.max"] may be modified (see addCPUQuota).
 func unifiedResToSystemdProps(cm *dbusConnManager, res map[string]string) (props []systemdDbus.Property, _ error) {
 	var err error
 
@@ -121,7 +124,17 @@ func unifiedResToSystemdProps(cm *dbusConnManager, res map[string]string) (props
 					return nil, fmt.Errorf("unified resource %q quota value conversion error: %w", k, err)
 				}
 			}
+			origQuota := quota
 			addCPUQuota(cm, &props, &quota, period)
+			if quota != origQuota {
+				// Update the value along with the round-up in order
+				// to write the same value to cgroupfs.
+				sv[0] = "max"
+				if quota > 0 {
+					sv[0] = strconv.FormatInt(quota, 10)
+				}
+				res[k] = strings.Join(sv, " ")
+			}
 
 		case "cpu.weight":
 			if shouldSetCPUIdle(cm, strings.TrimSpace(res["cpu.idle"])) {
@@ -554,8 +567,9 @@ func (m *UnifiedManager) Set(r *cgroups.Resources) error {
 	if r == nil {
 		return nil
 	}
-	// Use a copy since CpuQuota in r may be modified.
+	// Use a copy since CpuQuota and Unified["cpu.max"] in r may be modified.
 	rCopy := *r
+	rCopy.Unified = maps.Clone(r.Unified)
 	r = &rCopy
 	properties, err := genV2ResourcesProperties(m.fsMgr.Path(""), r, m.dbus)
 	if err != nil {
