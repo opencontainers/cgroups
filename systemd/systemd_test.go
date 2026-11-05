@@ -1,10 +1,12 @@
 package systemd
 
 import (
+	"errors"
 	"os"
 	"os/exec"
 	"reflect"
 	"strconv"
+	"strings"
 	"testing"
 
 	systemdDbus "github.com/coreos/go-systemd/v22/dbus"
@@ -459,5 +461,77 @@ func TestOOMPolicyApply(t *testing.T) {
 				t.Errorf("Expected OOMPolicy=%s, got %s", tc.expectedPolicy, oomPolicyStr)
 			}
 		})
+	}
+}
+
+// TestMemorySwapDisable checks that when swap is disabled by setting
+// MemorySwap equal to Memory, MemorySwapMax=0 is set on the unit, so
+// the setting survives systemd daemon-reload.
+func TestMemorySwapDisable(t *testing.T) {
+	if !IsRunningSystemd() {
+		t.Skip("Test requires systemd.")
+	}
+	if !cgroups.IsCgroup2UnifiedMode() {
+		t.Skip("cgroup v2 is required")
+	}
+	if os.Geteuid() != 0 {
+		t.Skip("Test requires root.")
+	}
+
+	const limit = 256 * 1024 * 1024
+	config := &cgroups.Cgroup{
+		ScopePrefix: "test",
+		Name:        "test-swap-disable-" + strconv.Itoa(os.Getpid()),
+		Resources:   &cgroups.Resources{},
+	}
+	m := newManager(t, config)
+
+	// Scopes require a process inside.
+	cmd := exec.Command("sleep", "1m")
+	if err := cmd.Start(); err != nil {
+		t.Fatal(err)
+	}
+	// Make sure to not leave a zombie.
+	defer func() {
+		// These may fail, we don't care.
+		_ = cmd.Process.Kill()
+		_ = cmd.Wait()
+	}()
+
+	if err := m.Apply(cmd.Process.Pid); err != nil {
+		t.Fatal(err)
+	}
+	if err := m.Set(&cgroups.Resources{Memory: limit, MemorySwap: limit}); err != nil {
+		t.Fatal(err)
+	}
+
+	conn, err := systemdDbus.NewSystemdConnectionContext(t.Context())
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer conn.Close()
+
+	unitName := getUnitName(config)
+	prop, err := conn.GetUnitTypePropertyContext(t.Context(), unitName, "Scope", "MemorySwapMax")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if v, ok := prop.Value.Value().(uint64); !ok || v != 0 {
+		t.Fatalf("expected MemorySwapMax=0, got %v", prop.Value)
+	}
+
+	// Check that daemon-reload does not reset memory.swap.max.
+	if err := conn.ReloadContext(t.Context()); err != nil {
+		t.Fatal(err)
+	}
+	swap, err := cgroups.ReadFile(m.Path(""), "memory.swap.max")
+	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			t.Skip("swap accounting is not available")
+		}
+		t.Fatal(err)
+	}
+	if swap = strings.TrimSpace(swap); swap != "0" {
+		t.Fatalf("expected memory.swap.max=0 after daemon-reload, got %q", swap)
 	}
 }
