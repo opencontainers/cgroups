@@ -20,4 +20,4 @@ jobs:
     permissions:
       contents: read
       pull-requests: read
-    uses: opencontainers/runc/.github/workflows/review-policy.yml@c9232a3698424b71706c4d802a4395c3734cbcaf
+    uses: opencontainers/runc/.github/workflows/review-policy.yml@c0512b4ff3fddab104cad9fadf3fdcc8d8b9a193
