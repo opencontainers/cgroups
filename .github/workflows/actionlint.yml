@@ -8,6 +8,7 @@ on:
     branches:
       - main
       - release-*
+  merge_group:
   pull_request:
 
 # Cancel superseded runs of the same pull request. For everything else
