@@ -1,9 +1,14 @@
 package devices
 
 import (
+	"bytes"
+	"encoding/binary"
+	"slices"
+	"strconv"
 	"strings"
 	"testing"
 
+	"github.com/cilium/ebpf/asm"
 	devices "github.com/opencontainers/cgroups/devices/config"
 )
 
@@ -19,12 +24,62 @@ func hash(s, comm string) string {
 	return strings.Join(res, "\n")
 }
 
+// disassemble decodes the program with cilium/ebpf/asm and labels it the way
+// deviceFilter lays it out: a block starts right after the instructions added
+// by init and at every jump target, and each jump refers to the block it
+// lands on. A jump with a wrong offset lands elsewhere and shows up as a
+// misplaced label in the listing.
+func disassemble(t testing.TB, insts bpfInstructions, bo binary.ByteOrder) string {
+	t.Helper()
+	var decoded asm.Instructions
+	r := bytes.NewReader(insts.marshal(bo))
+	for r.Len() > 0 {
+		var ins asm.Instruction
+		if err := ins.Unmarshal(r, bo, "linux"); err != nil {
+			t.Fatal(err)
+		}
+		decoded = append(decoded, ins)
+	}
+
+	var p program
+	p.init()
+	starts := []int{len(p.insts)}
+	for i, ins := range decoded {
+		if ins.OpCode.JumpOp() == asm.JNE {
+			starts = append(starts, i+1+int(ins.Offset))
+		}
+	}
+	slices.Sort(starts)
+	starts = slices.Compact(starts)
+	label := func(i int) string {
+		return "block-" + strconv.Itoa(slices.Index(starts, i))
+	}
+	for i, ins := range decoded {
+		if ins.OpCode.JumpOp() == asm.JNE {
+			target := i + 1 + int(ins.Offset)
+			// Print the jump the way the assembler shows a jump to a label.
+			ins.Offset = -1
+			decoded[i] = ins.WithReference(label(target))
+		}
+	}
+	for _, i := range starts {
+		if i >= len(decoded) {
+			t.Fatalf("jump to instruction %d of a %d-instruction program", i, len(decoded))
+		}
+		decoded[i] = decoded[i].WithSymbol(label(i))
+	}
+	return decoded.String()
+}
+
 func testDeviceFilter(t testing.TB, devices []*devices.Rule, expectedStr string) {
 	insts, _, err := deviceFilter(devices)
 	if err != nil {
 		t.Fatalf("%s: %v (devices: %+v)", t.Name(), err, devices)
 	}
-	s := insts.String()
+	s := disassemble(t, insts, binary.LittleEndian)
+	if be := disassemble(t, insts, binary.BigEndian); be != s {
+		t.Fatalf("big-endian encoding decodes to:\n%s\nlittle-endian encoding decodes to:\n%s", be, s)
+	}
 	if expectedStr != "" {
 		hashed := hash(s, "//")
 		expectedHashed := hash(expectedStr, "//")
