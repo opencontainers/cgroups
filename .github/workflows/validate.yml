@@ -90,6 +90,11 @@ jobs:
         annotations: true
 
   all-done-validate:
+    # Without a status function this job is skipped (not failed) when a needed
+    # job fails, and a skipped required check counts as passing. Run it anyway
+    # and fail if any of the needed jobs has failed or was cancelled (skipped
+    # jobs, e.g. ones not applicable to the event, are fine).
+    if: ${{ !cancelled() }}
     needs:
       - codespell
       - deps
@@ -99,4 +104,15 @@ jobs:
       - zizmor
     runs-on: ubuntu-26.04
     steps:
-    - run: echo "All jobs completed"
+    - name: check that all jobs succeeded
+      env:
+        NEEDS: ${{ toJSON(needs) }}
+      run: |
+        failed=$(jq -r 'to_entries[]
+            | select(.value.result != "success" and .value.result != "skipped")
+            | "::error::Job \(.key) result: \(.value.result)"' <<<"$NEEDS")
+        if [ -n "$failed" ]; then
+          echo "$failed"
+          exit 1
+        fi
+        echo "All jobs completed"
