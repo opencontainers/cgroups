@@ -8,6 +8,7 @@ on:
     branches:
       - main
       - release-*
+  merge_group:
   pull_request:
 
 # Cancel superseded runs of the same pull request. For everything else
@@ -28,10 +29,3 @@ jobs:
         with:
           persist-credentials: false
       - uses: kjanat/actionlint@1a9278318c43b72cdf644214128fb0786d210147 # v1.17
-
-  all-done-actionlint:
-    needs:
-      - actionlint
-    runs-on: ubuntu-26.04
-    steps:
-    - run: echo "All jobs completed"

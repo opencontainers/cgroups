@@ -6,6 +6,7 @@ on:
     branches:
       - main
       - release-*
+  merge_group:
   pull_request:
   schedule:
     # Runs at 00:00 UTC every Monday
@@ -75,9 +76,25 @@ jobs:
       run: LIMA_WORKDIR=/tmp/cgroups lima sudo GOTOOLCHAIN=auto CGROUPS_ALLOW_UNSAFE_TESTS=true go test -v ./...
 
   all-done:
+    # Without a status function this job is skipped (not failed) when a needed
+    # job fails, and a skipped required check counts as passing. Run it anyway
+    # and fail if any of the needed jobs has failed or was cancelled (skipped
+    # jobs, e.g. ones not applicable to the event, are fine).
+    if: ${{ !cancelled() }}
     needs:
       - cgroup-v2
       - cgroup-v1
     runs-on: ubuntu-26.04
     steps:
-    - run: echo "All jobs completed"
+    - name: check that all jobs succeeded
+      env:
+        NEEDS: ${{ toJSON(needs) }}
+      run: |
+        failed=$(jq -r 'to_entries[]
+            | select(.value.result != "success" and .value.result != "skipped")
+            | "::error::Job \(.key) result: \(.value.result)"' <<<"$NEEDS")
+        if [ -n "$failed" ]; then
+          echo "$failed"
+          exit 1
+        fi
+        echo "All jobs completed"
