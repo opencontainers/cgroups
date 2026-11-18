@@ -12,6 +12,11 @@ name: review-policy
 on:
   pull_request_review:
     types: [submitted, edited, dismissed]
+  # All required checks must pass in the merge queue, too. The reusable
+  # workflow does nothing for merge_group, since a pull request can only be
+  # added to the queue once this check has passed for it. Note that the
+  # triggers must be set here, as those of a reusable workflow are ignored.
+  merge_group:
 
 permissions: {}
 
