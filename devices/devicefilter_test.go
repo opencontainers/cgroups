@@ -389,3 +389,122 @@ block-1:
 `
 	testDeviceFilter(t, devices, expected)
 }
+
+func TestDeviceFilter_RestrictedAccessWithMajorMinor(t *testing.T) {
+	// Two eight-instruction blocks exercise jumps to both another rule and
+	// the default action. Different minor numbers keep the rules distinct.
+	tests := []struct {
+		name     string
+		rules    []*devices.Rule
+		expected string
+	}{
+		{
+			name: "allow-list",
+			rules: []*devices.Rule{
+				{
+					Type:        devices.CharDevice,
+					Major:       1,
+					Minor:       3,
+					Permissions: "r",
+					Allow:       true,
+				},
+				{
+					Type:        devices.CharDevice,
+					Major:       1,
+					Minor:       5,
+					Permissions: "w",
+					Allow:       true,
+				},
+			},
+			expected: `
+        0: LdXMemW dst: r2 src: r1 off: 0 imm: 0
+        1: AndImm32 dst: r2 imm: 65535
+        2: LdXMemW dst: r3 src: r1 off: 0 imm: 0
+        3: RShImm32 dst: r3 imm: 16
+        4: LdXMemW dst: r4 src: r1 off: 4 imm: 0
+        5: LdXMemW dst: r5 src: r1 off: 8 imm: 0
+block-0:
+        6: JNEImm dst: r2 off: -1 imm: 2 <block-1>
+        7: MovReg32 dst: r1 src: r3
+        8: AndImm32 dst: r1 imm: 2
+        9: JNEReg dst: r1 off: -1 src: r3 <block-1>
+        10: JNEImm dst: r4 off: -1 imm: 1 <block-1>
+        11: JNEImm dst: r5 off: -1 imm: 3 <block-1>
+        12: MovImm32 dst: r0 imm: 1
+        13: Exit
+block-1:
+        14: JNEImm dst: r2 off: -1 imm: 2 <block-2>
+        15: MovReg32 dst: r1 src: r3
+        16: AndImm32 dst: r1 imm: 4
+        17: JNEReg dst: r1 off: -1 src: r3 <block-2>
+        18: JNEImm dst: r4 off: -1 imm: 1 <block-2>
+        19: JNEImm dst: r5 off: -1 imm: 5 <block-2>
+        20: MovImm32 dst: r0 imm: 1
+        21: Exit
+block-2:
+        22: MovImm32 dst: r0 imm: 0
+        23: Exit
+`,
+		},
+		{
+			name: "deny-list",
+			rules: []*devices.Rule{
+				{
+					Type:        devices.WildcardDevice,
+					Major:       devices.Wildcard,
+					Minor:       devices.Wildcard,
+					Permissions: "rwm",
+					Allow:       true,
+				},
+				{
+					Type:        devices.CharDevice,
+					Major:       1,
+					Minor:       3,
+					Permissions: "r",
+					Allow:       false,
+				},
+				{
+					Type:        devices.CharDevice,
+					Major:       1,
+					Minor:       5,
+					Permissions: "w",
+					Allow:       false,
+				},
+			},
+			expected: `
+        0: LdXMemW dst: r2 src: r1 off: 0 imm: 0
+        1: AndImm32 dst: r2 imm: 65535
+        2: LdXMemW dst: r3 src: r1 off: 0 imm: 0
+        3: RShImm32 dst: r3 imm: 16
+        4: LdXMemW dst: r4 src: r1 off: 4 imm: 0
+        5: LdXMemW dst: r5 src: r1 off: 8 imm: 0
+block-0:
+        6: JNEImm dst: r2 off: -1 imm: 2 <block-1>
+        7: MovReg32 dst: r1 src: r3
+        8: AndImm32 dst: r1 imm: 2
+        9: JNEReg dst: r1 off: -1 src: r3 <block-1>
+        10: JNEImm dst: r4 off: -1 imm: 1 <block-1>
+        11: JNEImm dst: r5 off: -1 imm: 3 <block-1>
+        12: MovImm32 dst: r0 imm: 0
+        13: Exit
+block-1:
+        14: JNEImm dst: r2 off: -1 imm: 2 <block-2>
+        15: MovReg32 dst: r1 src: r3
+        16: AndImm32 dst: r1 imm: 4
+        17: JNEReg dst: r1 off: -1 src: r3 <block-2>
+        18: JNEImm dst: r4 off: -1 imm: 1 <block-2>
+        19: JNEImm dst: r5 off: -1 imm: 5 <block-2>
+        20: MovImm32 dst: r0 imm: 0
+        21: Exit
+block-2:
+        22: MovImm32 dst: r0 imm: 1
+        23: Exit
+`,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			testDeviceFilter(t, tt.rules, tt.expected)
+		})
+	}
+}
