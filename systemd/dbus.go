@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"math/rand/v2"
+	"os"
 	"sync"
 	"time"
 
@@ -66,19 +67,40 @@ func (d *dbusConnManager) getConnection() (*systemdDbus.Conn, error) {
 	return conn, nil
 }
 
+// Can be changed by unit tests.
+var (
+	newSystemBusConn     = systemdDbus.NewSystemConnectionContext
+	newPrivateSocketConn = systemdDbus.NewSystemdConnectionContext
+)
+
+// isBusy returns true if the error is that the connection was refused because
+// the listen backlog is full (EAGAIN) or a dbus daemon limit (such as the
+// per-user connection limit) was reached, so it is worth retrying.
+func isBusy(err error) bool {
+	return errors.Is(err, unix.EAGAIN) || isDbusError(err, "org.freedesktop.DBus.Error.LimitsExceeded")
+}
+
 func (d *dbusConnManager) newConnection() (*systemdDbus.Conn, error) {
 	newDbusConn := func() (*systemdDbus.Conn, error) {
 		if dbusRootless {
 			return newUserSystemdDbus()
 		}
-		return systemdDbus.NewWithContext(context.TODO())
+		// Like systemdDbus.NewWithContext, except that when the bus daemon is merely
+		// busy we retry below instead of falling back to the private socket: systemd
+		// sends every unit and job signal to every private socket connection, so
+		// letting many clients fall back to it under load slows PID 1 to a crawl.
+		conn, err := newSystemBusConn(context.TODO())
+		if err != nil && os.Geteuid() == 0 && !isBusy(err) {
+			return newPrivateSocketConn(context.TODO())
+		}
+		return conn, err
 	}
 
 	var err error
 	for retry := range 7 {
 		var conn *systemdDbus.Conn
 		conn, err = newDbusConn()
-		if !errors.Is(err, unix.EAGAIN) {
+		if !isBusy(err) {
 			return conn, err
 		}
 		// Exponential backoff (100ms * 2^attempt + ~12.5% jitter).
