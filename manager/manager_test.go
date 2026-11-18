@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/opencontainers/cgroups"
+	"github.com/opencontainers/cgroups/internal/testutil"
 	"github.com/opencontainers/cgroups/systemd"
 )
 
@@ -27,6 +28,7 @@ func TestNilResourcesSystemd(t *testing.T) {
 }
 
 func testNilResources(t *testing.T, systemd bool) {
+	testutil.RequireCgroups(t)
 	cg := &cgroups.Cgroup{} // .Resources is nil
 	cg.Systemd = systemd
 	mgr, err := New(cg)

@@ -2,6 +2,8 @@ package cgroups
 
 import (
 	"testing"
+
+	"github.com/opencontainers/cgroups/internal/testutil"
 )
 
 func TestParseCgroups(t *testing.T) {
@@ -12,7 +14,7 @@ func TestParseCgroups(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if IsCgroup2UnifiedMode() {
+	if testutil.CgroupVersion() != 1 {
 		return
 	}
 	if _, ok := cgroups["cpu"]; !ok {

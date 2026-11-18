@@ -7,12 +7,11 @@ import (
 
 	"github.com/opencontainers/cgroups"
 	"github.com/opencontainers/cgroups/internal/path"
+	"github.com/opencontainers/cgroups/internal/testutil"
 )
 
 func TestInvalidCgroupPath(t *testing.T) {
-	if cgroups.IsCgroup2UnifiedMode() {
-		t.Skip("cgroup v2 is not supported")
-	}
+	testutil.RequireCgroupV1(t)
 
 	root, err := rootPath()
 	if err != nil {
@@ -93,7 +92,7 @@ func TestInvalidCgroupPath(t *testing.T) {
 func TestTryDefaultCgroupRoot(t *testing.T) {
 	res := tryDefaultCgroupRoot()
 	exp := defaultCgroupRoot
-	if cgroups.IsCgroup2UnifiedMode() {
+	if testutil.CgroupVersion() != 1 {
 		// checking that tryDefaultCgroupRoot does return ""
 		// in case /sys/fs/cgroup is not cgroup v1 root dir.
 		exp = ""
