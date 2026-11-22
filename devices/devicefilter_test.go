@@ -314,10 +314,12 @@ func TestDeviceFilter_PrivilegedExceptSingleDevice(t *testing.T) {
 			Type:        'b',
 			Major:       8,
 			Minor:       0,
-			Permissions: "rwm",
+			Permissions: "r",
 			Allow:       false,
 		},
 	}
+	// Restricted access together with major and minor results in the
+	// longest (eight-instruction) rule block.
 	expected := `
 // load parameters into registers
          0: LdXMemW dst: r2 src: r1 off: 0 imm: 0
@@ -327,16 +329,19 @@ func TestDeviceFilter_PrivilegedExceptSingleDevice(t *testing.T) {
          4: LdXMemW dst: r4 src: r1 off: 4 imm: 0
          5: LdXMemW dst: r5 src: r1 off: 8 imm: 0
 block-0:
-// return 0 (reject) if type==b && major == 8 && minor == 0
+// return 0 (reject) if type==b && access==r && major == 8 && minor == 0
          6: JNEImm dst: r2 off: -1 imm: 1 <block-1>
-         7: JNEImm dst: r4 off: -1 imm: 8 <block-1>
-         8: JNEImm dst: r5 off: -1 imm: 0 <block-1>
-         9: MovImm32 dst: r0 imm: 0
-        10: Exit
+         7: MovReg32 dst: r1 src: r3
+         8: AndImm32 dst: r1 imm: 2
+         9: JNEReg dst: r1 off: -1 src: r3 <block-1>
+        10: JNEImm dst: r4 off: -1 imm: 8 <block-1>
+        11: JNEImm dst: r5 off: -1 imm: 0 <block-1>
+        12: MovImm32 dst: r0 imm: 0
+        13: Exit
 block-1:
 // return 1 (accept)
-        11: MovImm32 dst: r0 imm: 1
-        12: Exit
+        14: MovImm32 dst: r0 imm: 1
+        15: Exit
 `
 	testDeviceFilter(t, devices, expected)
 }
