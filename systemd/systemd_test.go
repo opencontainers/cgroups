@@ -191,11 +191,14 @@ func TestUnifiedResToSystemdProps(t *testing.T) {
 			},
 		},
 		{
-			name: "memory.zswap.max=max",
+			name:   "memory.zswap.max=max",
+			minVer: zswapMaxSupportedVersion,
 			res: map[string]string{
 				"memory.zswap.max": "max",
 			},
-			expError: true,
+			expProps: []systemdDbus.Property{
+				newProp("MemoryZSwapMax", uint64(math.MaxUint64)),
+			},
 		},
 		{
 			name: "memory.zswap.max invalid",
